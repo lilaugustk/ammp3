@@ -40,6 +40,10 @@
             padding: 0;
         }
 
+        html {
+            overflow-y: scroll;
+        }
+
         body {
             background-color: var(--bg-color);
             color: var(--card-text);
@@ -131,15 +135,15 @@
 
         /* Detail Panel Card */
         .detail-panel {
-            background-color: var(--nav-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
+            background-color: transparent;
+            border: none;
+            border-radius: 0;
             padding: 40px 20px;
             text-align: center;
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: none;
         }
 
         .sound-title {
@@ -166,12 +170,9 @@
             width: 134px;
             height: 134px;
             border-radius: 50%;
-            background: #090d16; /* Hollow dark interior */
-            border: 6px solid #2d3748; /* Thicker, realistic gray socket rim */
-            box-shadow: 
-                0 6px 10px rgba(0,0,0,0.4), 
-                inset 0 6px 10px rgba(0,0,0,0.9), /* Gap depth */
-                0 1px 0 rgba(255,255,255,0.15); /* Top highlight */
+            background: transparent;
+            border: none;
+            box-shadow: none;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -367,6 +368,101 @@
             transform: translateX(-50%) translateY(0);
         }
 
+        /* Dropdown Container */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        /* Dropdown Button */
+        .dropdown-btn {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            background: none;
+            border: none;
+            cursor: pointer;
+            outline: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 0;
+            transition: color 0.2s;
+        }
+
+        .dropdown-btn:hover {
+            color: #3b82f6;
+        }
+
+        .dropdown-btn svg {
+            width: 12px;
+            height: 12px;
+            fill: currentColor;
+            transition: transform 0.2s;
+        }
+
+        /* Dropdown Content */
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: var(--nav-bg);
+            min-width: 220px;
+            max-height: 350px;
+            overflow-y: auto;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5);
+            z-index: 200;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            padding: 6px 0;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            scrollbar-width: thin;
+            scrollbar-color: #1f2937 var(--bg-color);
+        }
+
+        .dropdown-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dropdown-content::-webkit-scrollbar-thumb {
+            background-color: #1f2937;
+            border-radius: 3px;
+        }
+
+        .dropdown-content a {
+            color: #ffffff;
+            padding: 8px 16px;
+            text-decoration: none;
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .dropdown-content a:hover, .dropdown-content a.active {
+            background-color: #1f2937;
+            color: #3b82f6;
+        }
+
+        /* Show the dropdown menu */
+        .dropdown.show-menu .dropdown-content {
+            display: block;
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .dropdown.show-menu .dropdown-btn svg {
+            transform: rotate(180deg);
+        }
+
         /* Footer */
         footer {
             max-width: 800px;
@@ -399,6 +495,21 @@
             
             <nav class="nav-links">
                 <a href="{{ url('/') }}" class="nav-link">Trang chủ</a>
+                <span style="color: var(--border-color)">|</span>
+                <div class="dropdown" id="categoryDropdown">
+                    <button class="dropdown-btn" aria-haspopup="true" aria-expanded="false" id="categoryDropdownBtn">
+                        Danh mục
+                        <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                    </button>
+                    <div class="dropdown-content" aria-labelledby="categoryDropdownBtn">
+                        <a class="category-menu-item" data-category="all" href="{{ url('/') }}">Tất cả</a>
+                        @foreach($globalCategories as $category)
+                            <a class="category-menu-item {{ (isset($sound) && $sound->category && $sound->category->slug == $category->slug) ? 'active' : '' }}" data-category="{{ $category->slug }}" href="{{ url('/?category=' . $category->slug) }}">
+                                {{ $category->name }}
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
             </nav>
         </div>
     </header>
@@ -451,7 +562,7 @@
                 </a>
             </div>
 
-            <a href="{{ url('/') }}" class="back-link">&larr; Quay lại danh sách chính</a>
+            <a href="{{ url('/') }}" class="back-link">Quay lại danh sách chính</a>
         </div>
 
     </main>
@@ -479,6 +590,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             initFavoriteUI();
+            setupDropdown();
         });
 
         // Hàm phát âm thanh
@@ -489,19 +601,30 @@
             if (currentAudio) {
                 currentAudio.currentTime = 0;
                 currentAudio.play();
+
+                if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
+                btn.classList.add('playing');
+                btn.bounceTimeout = setTimeout(() => {
+                    btn.classList.remove('playing');
+                }, 2000);
                 return;
             }
 
+            if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
             btn.classList.add('playing');
+            btn.bounceTimeout = setTimeout(() => {
+                btn.classList.remove('playing');
+            }, 1000);
+
             currentAudio = new Audio(audioUrl);
             
             currentAudio.addEventListener('ended', () => {
-                btn.classList.remove('playing');
                 currentAudio = null;
             });
 
             currentAudio.addEventListener('error', () => {
                 btn.classList.remove('playing');
+                if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
                 showToast("Lỗi khi tải file âm thanh!");
                 currentAudio = null;
             });
@@ -537,6 +660,26 @@
                 favBtn.classList.add('active-fav');
                 favText.textContent = 'Đã Yêu thích';
             }
+        }
+
+        // Đăng ký và quản lý dropdown danh mục (đóng/mở bằng click & hover)
+        function setupDropdown() {
+            const dropdown = document.getElementById('categoryDropdown');
+            const btn = document.getElementById('categoryDropdownBtn');
+            if (!dropdown || !btn) return;
+
+            // Toggle khi click vào nút Danh mục
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdown.classList.toggle('show-menu');
+            });
+
+            // Đóng khi click ra bên ngoài
+            document.addEventListener('click', (e) => {
+                if (!dropdown.contains(e.target)) {
+                    dropdown.classList.remove('show-menu');
+                }
+            });
         }
 
         // Toggle Favorite

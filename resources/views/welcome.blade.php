@@ -40,6 +40,10 @@
             padding: 0;
         }
 
+        html {
+            overflow-y: scroll;
+        }
+
         body {
             background-color: var(--bg-color);
             color: var(--card-text);
@@ -228,12 +232,9 @@
             width: 82px;
             height: 82px;
             border-radius: 50%;
-            background: #090d16; /* Hollow dark interior */
-            border: 5px solid #2d3748; /* Thicker, realistic gray socket rim */
-            box-shadow: 
-                0 4px 6px rgba(0,0,0,0.4), 
-                inset 0 4px 8px rgba(0,0,0,0.9), /* Strong inner shadow representing gap depth */
-                0 1px 0 rgba(255,255,255,0.15); /* Top highlight on plastic rim */
+            background: transparent;
+            border: none;
+            box-shadow: none;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -459,6 +460,101 @@
                 font-size: 20px;
             }
         }
+
+        /* Dropdown Container */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        /* Dropdown Button */
+        .dropdown-btn {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            background: none;
+            border: none;
+            cursor: pointer;
+            outline: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 0;
+            transition: color 0.2s;
+        }
+
+        .dropdown-btn:hover {
+            color: #3b82f6;
+        }
+
+        .dropdown-btn svg {
+            width: 12px;
+            height: 12px;
+            fill: currentColor;
+            transition: transform 0.2s;
+        }
+
+        /* Dropdown Content */
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: var(--nav-bg);
+            min-width: 220px;
+            max-height: 350px;
+            overflow-y: auto;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5);
+            z-index: 200;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            padding: 6px 0;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            scrollbar-width: thin;
+            scrollbar-color: #1f2937 var(--bg-color);
+        }
+
+        .dropdown-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dropdown-content::-webkit-scrollbar-thumb {
+            background-color: #1f2937;
+            border-radius: 3px;
+        }
+
+        .dropdown-content a {
+            color: #ffffff;
+            padding: 8px 16px;
+            text-decoration: none;
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .dropdown-content a:hover, .dropdown-content a.active {
+            background-color: #1f2937;
+            color: #3b82f6;
+        }
+
+        /* Show the dropdown menu */
+        .dropdown.show-menu .dropdown-content {
+            display: block;
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .dropdown.show-menu .dropdown-btn svg {
+            transform: rotate(180deg);
+        }
     </style>
 </head>
 <body>
@@ -480,6 +576,21 @@
             <nav class="nav-links">
                 <a href="{{ url('/') }}" class="nav-link">Trang chủ</a>
                 <span style="color: var(--border-color)">|</span>
+                <div class="dropdown" id="categoryDropdown">
+                    <button class="dropdown-btn" aria-haspopup="true" aria-expanded="false" id="categoryDropdownBtn">
+                        Danh mục
+                        <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                    </button>
+                    <div class="dropdown-content" aria-labelledby="categoryDropdownBtn">
+                        <a class="category-menu-item active" data-category="all" href="{{ url('/') }}">Tất cả</a>
+                        @foreach($globalCategories as $category)
+                            <a class="category-menu-item" data-category="{{ $category->slug }}" href="{{ url('/?category=' . $category->slug) }}">
+                                {{ $category->name }}
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+                <span style="color: var(--border-color)">|</span>
                 <button id="show-fav-btn" class="nav-link" style="background:none; border:none; cursor:pointer; outline:none;">Yêu thích</button>
             </nav>
         </div>
@@ -493,16 +604,6 @@
             <h1 class="hero-title">AMMP3.com - Meme Soundboard Việt Nam</h1>
             <p class="hero-desc">Click vào nút để phát âm thanh tức thì. Kho hiệu ứng âm thanh, tiếng cười, câu nói viral Việt Nam hài hước nhất dùng cho dựng video, livestream trên AMMP3.com.</p>
         </section>
-
-        <!-- Category Horizontal Pills -->
-        <div class="categories-wrapper">
-            <span class="category-pill active" data-category="all" id="cat-all">Tất cả</span>
-            @foreach($categories as $category)
-                <span class="category-pill" data-category="{{ $category->slug }}" id="cat-{{ $category->slug }}">
-                    {{ $category->name }}
-                </span>
-            @endforeach
-        </div>
 
         <!-- Sounds Buttons Grid -->
         <section class="sounds-grid" id="soundsGrid">
@@ -607,15 +708,16 @@
             setupSearch();
             setupCategories();
             setupFavToggle();
+            setupDropdown();
             
             // Lọc danh mục nếu có sẵn từ query string
             const urlParams = new URLSearchParams(window.location.search);
             const initialCat = urlParams.get('category');
             if (initialCat) {
-                const pill = document.querySelector(`.category-pill[data-category="${initialCat}"]`);
-                if (pill) {
-                    document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
-                    pill.classList.add('active');
+                const item = document.querySelector(`.category-menu-item[data-category="${initialCat}"]`);
+                if (item) {
+                    document.querySelectorAll('.category-menu-item').forEach(m => m.classList.remove('active'));
+                    item.classList.add('active');
                     activeCategory = initialCat;
                 }
             }
@@ -636,6 +738,12 @@
             if (currentAudio && currentBtn === btn) {
                 currentAudio.currentTime = 0;
                 currentAudio.play();
+
+                if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
+                btn.classList.add('playing');
+                btn.bounceTimeout = setTimeout(() => {
+                    btn.classList.remove('playing');
+                }, 2000);
                 return;
             }
 
@@ -644,23 +752,32 @@
                 currentAudio.pause();
                 if (currentBtn) {
                     currentBtn.classList.remove('playing');
+                    if (currentBtn.bounceTimeout) clearTimeout(currentBtn.bounceTimeout);
                 }
             }
 
             // Tạo audio mới
             currentBtn = btn;
-            currentBtn.classList.add('playing');
+            
+            if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
+            btn.classList.add('playing');
+            btn.bounceTimeout = setTimeout(() => {
+                btn.classList.remove('playing');
+            }, 2000);
+
             currentAudio = new Audio(audioUrl);
             
             // Thiết lập sự kiện hoàn tất
             currentAudio.addEventListener('ended', () => {
-                btn.classList.remove('playing');
                 currentAudio = null;
                 currentBtn = null;
             });
 
             currentAudio.addEventListener('error', () => {
-                btn.classList.remove('playing');
+                if (currentBtn) {
+                    currentBtn.classList.remove('playing');
+                    if (currentBtn.bounceTimeout) clearTimeout(currentBtn.bounceTimeout);
+                }
                 showToast("Lỗi khi tải file âm thanh!");
                 currentAudio = null;
                 currentBtn = null;
@@ -756,13 +873,51 @@
 
         // Đăng ký Lọc danh mục
         function setupCategories() {
-            const pills = document.querySelectorAll('.category-pill');
-            pills.forEach(pill => {
-                pill.addEventListener('click', () => {
-                    pills.forEach(p => p.classList.remove('active'));
-                    pill.classList.add('active');
-                    activeCategory = pill.getAttribute('data-category');
+            const menuItems = document.querySelectorAll('.category-menu-item');
+            menuItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    menuItems.forEach(m => m.classList.remove('active'));
+                    item.classList.add('active');
+                    activeCategory = item.getAttribute('data-category');
+                    
+                    const url = new URL(window.location.href);
+                    if (activeCategory === 'all') {
+                        url.searchParams.delete('category');
+                    } else {
+                        url.searchParams.set('category', activeCategory);
+                    }
+                    window.history.pushState({}, '', url);
+
                     filterSounds();
+                });
+            });
+        }
+
+        // Đăng ký và quản lý dropdown danh mục (đóng/mở bằng click & hover)
+        function setupDropdown() {
+            const dropdown = document.getElementById('categoryDropdown');
+            const btn = document.getElementById('categoryDropdownBtn');
+            if (!dropdown || !btn) return;
+
+            // Toggle khi click vào nút Danh mục
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdown.classList.toggle('show-menu');
+            });
+
+            // Đóng khi click ra bên ngoài
+            document.addEventListener('click', (e) => {
+                if (!dropdown.contains(e.target)) {
+                    dropdown.classList.remove('show-menu');
+                }
+            });
+
+            // Tự đóng khi chọn một danh mục
+            const menuItems = dropdown.querySelectorAll('.category-menu-item');
+            menuItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    dropdown.classList.remove('show-menu');
                 });
             });
         }
@@ -788,7 +943,7 @@
             favoritedIds.forEach(id => {
                 const favBtn = document.getElementById(`fav-btn-${id}`);
                 if (favBtn) {
-                    favBtn.classList.add('active-fav');
+                    favBtn.classList.add('active-fav'); 
                 }
             });
         }
