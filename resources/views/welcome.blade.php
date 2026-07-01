@@ -701,7 +701,8 @@
         // Web Audio API - Cực nhanh, phát không độ trễ
         let audioCtx = null;
         const audioBuffers = {}; // Caches decoded buffers: { id: AudioBuffer }
-        let activeSources = {};  // Tracks active source nodes: { id: AudioBufferSourceNode }
+        let activeSources = [];  // Tracks active source items: { id, source, btn }
+        let fallbackAudio = null; // Single HTML5 audio fallback player to prevent overlapping fallback sounds
 
         function getAudioContext() {
             if (!audioCtx) {
@@ -763,26 +764,32 @@
                 ctx.resume();
             }
 
-            const buffer = audioBuffers[id];
-            
-            // Dừng tất cả âm thanh đang phát khác
-            Object.keys(activeSources).forEach(activeId => {
+            // 1. Dừng mọi luồng âm thanh đang phát (cả fallback và Web Audio)
+            if (fallbackAudio) {
                 try {
-                    activeSources[activeId].stop();
+                    fallbackAudio.pause();
                 } catch(e) {}
-                const otherBtn = document.getElementById(`play-btn-${activeId}`);
-                if (otherBtn) {
-                    otherBtn.classList.remove('playing');
-                    if (otherBtn.bounceTimeout) clearTimeout(otherBtn.bounceTimeout);
-                }
-                delete activeSources[activeId];
-            });
+                fallbackAudio = null;
+            }
 
-            // Nếu chưa preload xong buffer (fallback phát trực tiếp)
+            activeSources.forEach(item => {
+                try {
+                    item.source.stop();
+                } catch(e) {}
+                if (item.btn) {
+                    item.btn.classList.remove('playing');
+                    if (item.btn.bounceTimeout) clearTimeout(item.btn.bounceTimeout);
+                }
+            });
+            activeSources = [];
+
+            const buffer = audioBuffers[id];
+
+            // 2. Nếu chưa preload xong buffer (fallback phát trực tiếp)
             if (!buffer) {
                 const audioUrl = btn.getAttribute('data-audio');
-                const audio = new Audio(audioUrl);
-                audio.play();
+                fallbackAudio = new Audio(audioUrl);
+                fallbackAudio.play();
                 
                 if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
                 btn.classList.add('playing');
@@ -792,12 +799,13 @@
                 return;
             }
 
-            // Phát bằng Web Audio API
+            // 3. Phát bằng Web Audio API
             const source = ctx.createBufferSource();
             source.buffer = buffer;
             source.connect(ctx.destination);
             
-            activeSources[id] = source;
+            const sourceItem = { id: id, source: source, btn: btn };
+            activeSources.push(sourceItem);
 
             if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
             btn.classList.add('playing');
@@ -808,9 +816,7 @@
             source.start(0);
 
             source.onended = () => {
-                if (activeSources[id] === source) {
-                    delete activeSources[id];
-                }
+                activeSources = activeSources.filter(item => item !== sourceItem);
             };
         }
 

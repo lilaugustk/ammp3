@@ -591,6 +591,7 @@
         let audioCtx = null;
         let audioBuffer = null;
         let activeSource = null;
+        let fallbackAudio = null; // Single HTML5 audio fallback player to prevent overlapping fallback sounds
         let soundId = "{{ $sound->id }}";
         let audioUrl = "{{ $audioUrl }}";
         let favoritedIds = JSON.parse(localStorage.getItem('fav_sounds') || '[]');
@@ -627,7 +628,14 @@
                 ctx.resume();
             }
 
-            // Dừng nếu đang phát
+            // 1. Dừng mọi luồng âm thanh đang phát (cả fallback và Web Audio)
+            if (fallbackAudio) {
+                try {
+                    fallbackAudio.pause();
+                } catch(e) {}
+                fallbackAudio = null;
+            }
+
             if (activeSource) {
                 try {
                     activeSource.stop();
@@ -635,10 +643,10 @@
                 activeSource = null;
             }
 
-            // Fallback nếu chưa tải xong buffer
+            // 2. Fallback nếu chưa tải xong buffer (phát trực tiếp)
             if (!audioBuffer) {
-                const audio = new Audio(audioUrl);
-                audio.play();
+                fallbackAudio = new Audio(audioUrl);
+                fallbackAudio.play();
                 
                 if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
                 btn.classList.add('playing');
@@ -648,7 +656,7 @@
                 return;
             }
 
-            // Phát bằng Web Audio API
+            // 3. Phát bằng Web Audio API
             const source = ctx.createBufferSource();
             source.buffer = audioBuffer;
             source.connect(ctx.destination);
