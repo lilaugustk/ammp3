@@ -16,7 +16,10 @@
     <meta property="og:url" content="{{ url('/') }}">
     <meta property="og:title" content="AMMP3.com - Meme Soundboard Việt Nam">
     <meta property="og:description" content="Nghe và tải xuống hàng ngàn hiệu ứng âm thanh meme, tiếng cười độc đáo nhất trên AMMP3.com. Giao diện soundboard đơn giản, tải cực nhanh!">
-    <meta property="og:image" content="{{ asset('favicon.ico') }}">
+    <meta property="og:image" content="{{ asset('favicon.png') }}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -709,6 +712,7 @@
             setupCategories();
             setupFavToggle();
             setupDropdown();
+            setupPreload();
             
             // Lọc danh mục nếu có sẵn từ query string
             const urlParams = new URLSearchParams(window.location.search);
@@ -731,24 +735,11 @@
 
         // Hàm phát âm thanh
         function playAudio(btn, id) {
-            const audioUrl = btn.getAttribute('data-audio');
-            if (!audioUrl) return;
-
-            // Nếu click vào chính nút đang phát -> Phát lại từ đầu
-            if (currentAudio && currentBtn === btn) {
-                currentAudio.currentTime = 0;
-                currentAudio.play();
-
-                if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
-                btn.classList.add('playing');
-                btn.bounceTimeout = setTimeout(() => {
-                    btn.classList.remove('playing');
-                }, 2000);
-                return;
-            }
+            const audio = document.getElementById(`audio-element-${id}`);
+            if (!audio) return;
 
             // Nếu đang phát nút khác -> dừng nút khác lại
-            if (currentAudio) {
+            if (currentAudio && currentAudio !== audio) {
                 currentAudio.pause();
                 if (currentBtn) {
                     currentBtn.classList.remove('playing');
@@ -756,34 +747,60 @@
                 }
             }
 
-            // Tạo audio mới
+            currentAudio = audio;
             currentBtn = btn;
             
+            // Phát lại từ đầu
+            audio.currentTime = 0;
+
             if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
             btn.classList.add('playing');
             btn.bounceTimeout = setTimeout(() => {
                 btn.classList.remove('playing');
-            }, 2000);
+            }, 1000);
 
-            currentAudio = new Audio(audioUrl);
-            
-            // Thiết lập sự kiện hoàn tất
-            currentAudio.addEventListener('ended', () => {
-                currentAudio = null;
-                currentBtn = null;
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    btn.classList.remove('playing');
+                    if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
+                    showToast("Lỗi khi phát âm thanh!");
+                });
+            }
+        }
+
+        // Tạo audio element ẩn và preload động khi hover/touch
+        function setupPreload() {
+            const cards = document.querySelectorAll('.sound-card');
+            cards.forEach(card => {
+                const id = card.id.replace('card-', '');
+                const btn = document.getElementById(`play-btn-${id}`);
+                if (!btn) return;
+                const audioUrl = btn.getAttribute('data-audio');
+                
+                // Tạo audio element ẩn
+                const audio = document.createElement('audio');
+                audio.id = `audio-element-${id}`;
+                audio.src = audioUrl;
+                audio.preload = 'none';
+                card.appendChild(audio);
+
+                // Preload khi di chuột vào card
+                card.addEventListener('mouseenter', () => {
+                    if (audio.preload !== 'auto') {
+                        audio.preload = 'auto';
+                        audio.load();
+                    }
+                }, { once: true });
+
+                // Preload khi chạm vào trên mobile
+                card.addEventListener('touchstart', () => {
+                    if (audio.preload !== 'auto') {
+                        audio.preload = 'auto';
+                        audio.load();
+                    }
+                }, { once: true });
             });
-
-            currentAudio.addEventListener('error', () => {
-                if (currentBtn) {
-                    currentBtn.classList.remove('playing');
-                    if (currentBtn.bounceTimeout) clearTimeout(currentBtn.bounceTimeout);
-                }
-                showToast("Lỗi khi tải file âm thanh!");
-                currentAudio = null;
-                currentBtn = null;
-            });
-
-            currentAudio.play();
         }
 
         // Sao chép liên kết vào clipboard

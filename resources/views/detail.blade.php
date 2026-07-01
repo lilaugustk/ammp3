@@ -16,7 +16,10 @@
     <meta property="og:url" content="{{ url('/instant/' . $sound->slug . '-' . $sound->id) }}">
     <meta property="og:title" content="{{ $sound->title }} - AMMP3.com">
     <meta property="og:description" content="Nghe và tải xuống hiệu ứng âm thanh '{{ $sound->title }}' chất lượng cao miễn phí trên AMMP3.com!">
-    <meta property="og:image" content="{{ asset('favicon.ico') }}">
+    <meta property="og:image" content="{{ asset('favicon.png') }}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -181,8 +184,8 @@
         }
 
         .instant-btn-large {
-            width: 90px; /* Distinct gap (90px inside 134px) */
-            height: 90px;
+            width: 125px;
+            height: 125px;
             border-radius: 50%;
             border: none;
             cursor: pointer;
@@ -524,6 +527,7 @@
             </a>
 
             <div class="instant-btn-wrapper-large">
+                <audio id="audio-player" src="{{ $audioUrl }}" preload="auto"></audio>
                 <button 
                     id="play-btn"
                     class="instant-btn-large btn-{{ $color }}" 
@@ -591,24 +595,14 @@
         document.addEventListener('DOMContentLoaded', () => {
             initFavoriteUI();
             setupDropdown();
+            currentAudio = document.getElementById('audio-player');
         });
 
         // Hàm phát âm thanh
         function playAudio(btn) {
-            const audioUrl = btn.getAttribute('data-audio');
-            if (!audioUrl) return;
+            if (!currentAudio) return;
 
-            if (currentAudio) {
-                currentAudio.currentTime = 0;
-                currentAudio.play();
-
-                if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
-                btn.classList.add('playing');
-                btn.bounceTimeout = setTimeout(() => {
-                    btn.classList.remove('playing');
-                }, 2000);
-                return;
-            }
+            currentAudio.currentTime = 0;
 
             if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
             btn.classList.add('playing');
@@ -616,20 +610,14 @@
                 btn.classList.remove('playing');
             }, 1000);
 
-            currentAudio = new Audio(audioUrl);
-            
-            currentAudio.addEventListener('ended', () => {
-                currentAudio = null;
-            });
-
-            currentAudio.addEventListener('error', () => {
-                btn.classList.remove('playing');
-                if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
-                showToast("Lỗi khi tải file âm thanh!");
-                currentAudio = null;
-            });
-
-            currentAudio.play();
+            const playPromise = currentAudio.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    btn.classList.remove('playing');
+                    if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
+                    showToast("Lỗi khi phát âm thanh!");
+                });
+            }
         }
 
         // Copy Link
