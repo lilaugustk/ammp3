@@ -527,7 +527,6 @@
             </a>
 
             <div class="instant-btn-wrapper-large">
-                <audio id="audio-player" src="{{ $audioUrl }}" preload="auto"></audio>
                 <button 
                     id="play-btn"
                     class="instant-btn-large btn-{{ $color }}" 
@@ -588,21 +587,72 @@
 
     <!-- JS Audio & Favorites Logic -->
     <script>
-        let currentAudio = null;
+        // Web Audio API - Cực nhanh, phát không độ trễ
+        let audioCtx = null;
+        let audioBuffer = null;
+        let activeSource = null;
         let soundId = "{{ $sound->id }}";
+        let audioUrl = "{{ $audioUrl }}";
         let favoritedIds = JSON.parse(localStorage.getItem('fav_sounds') || '[]');
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            return audioCtx;
+        }
+
+        // Tải trước và giải mã âm thanh bằng Web Audio API
+        async function preloadSound() {
+            try {
+                const response = await fetch(audioUrl);
+                const arrayBuffer = await response.arrayBuffer();
+                const ctx = getAudioContext();
+                audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+            } catch (e) {
+                console.error("Failed to preload sound", e);
+            }
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             initFavoriteUI();
             setupDropdown();
-            currentAudio = document.getElementById('audio-player');
+            preloadSound();
         });
 
         // Hàm phát âm thanh
         function playAudio(btn) {
-            if (!currentAudio) return;
+            const ctx = getAudioContext();
+            if (ctx.state === 'suspended') {
+                ctx.resume();
+            }
 
-            currentAudio.currentTime = 0;
+            // Dừng nếu đang phát
+            if (activeSource) {
+                try {
+                    activeSource.stop();
+                } catch(e) {}
+                activeSource = null;
+            }
+
+            // Fallback nếu chưa tải xong buffer
+            if (!audioBuffer) {
+                const audio = new Audio(audioUrl);
+                audio.play();
+                
+                if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
+                btn.classList.add('playing');
+                btn.bounceTimeout = setTimeout(() => {
+                    btn.classList.remove('playing');
+                }, 1000);
+                return;
+            }
+
+            // Phát bằng Web Audio API
+            const source = ctx.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(ctx.destination);
+            activeSource = source;
 
             if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
             btn.classList.add('playing');
@@ -610,14 +660,13 @@
                 btn.classList.remove('playing');
             }, 1000);
 
-            const playPromise = currentAudio.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    btn.classList.remove('playing');
-                    if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
-                    showToast("Lỗi khi phát âm thanh!");
-                });
-            }
+            source.start(0);
+
+            source.onended = () => {
+                if (activeSource === source) {
+                    activeSource = null;
+                }
+            };
         }
 
         // Copy Link

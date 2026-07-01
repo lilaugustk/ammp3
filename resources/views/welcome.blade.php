@@ -698,9 +698,32 @@
 
     <!-- JS Audio & Search Logic -->
     <script>
-        // Trình phát âm thanh duy nhất
-        let currentAudio = null;
-        let currentBtn = null;
+        // Web Audio API - Cực nhanh, phát không độ trễ
+        let audioCtx = null;
+        const audioBuffers = {}; // Caches decoded buffers: { id: AudioBuffer }
+        let activeSources = {};  // Tracks active source nodes: { id: AudioBufferSourceNode }
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            return audioCtx;
+        }
+
+        // Tải trước và giải mã âm thanh bằng Web Audio API
+        async function preloadSound(id, url) {
+            if (audioBuffers[id]) return;
+            try {
+                const response = await fetch(url);
+                const arrayBuffer = await response.arrayBuffer();
+                const ctx = getAudioContext();
+                const decodedData = await ctx.decodeAudioData(arrayBuffer);
+                audioBuffers[id] = decodedData;
+            } catch (e) {
+                console.error("Failed to preload sound: " + id, e);
+            }
+        }
+
         let favoritedIds = JSON.parse(localStorage.getItem('fav_sounds') || '[]');
         let showOnlyFavs = false;
         let activeCategory = 'all';
@@ -735,23 +758,46 @@
 
         // Hàm phát âm thanh
         function playAudio(btn, id) {
-            const audio = document.getElementById(`audio-element-${id}`);
-            if (!audio) return;
-
-            // Nếu đang phát nút khác -> dừng nút khác lại
-            if (currentAudio && currentAudio !== audio) {
-                currentAudio.pause();
-                if (currentBtn) {
-                    currentBtn.classList.remove('playing');
-                    if (currentBtn.bounceTimeout) clearTimeout(currentBtn.bounceTimeout);
-                }
+            const ctx = getAudioContext();
+            if (ctx.state === 'suspended') {
+                ctx.resume();
             }
 
-            currentAudio = audio;
-            currentBtn = btn;
+            const buffer = audioBuffers[id];
             
-            // Phát lại từ đầu
-            audio.currentTime = 0;
+            // Dừng tất cả âm thanh đang phát khác
+            Object.keys(activeSources).forEach(activeId => {
+                try {
+                    activeSources[activeId].stop();
+                } catch(e) {}
+                const otherBtn = document.getElementById(`play-btn-${activeId}`);
+                if (otherBtn) {
+                    otherBtn.classList.remove('playing');
+                    if (otherBtn.bounceTimeout) clearTimeout(otherBtn.bounceTimeout);
+                }
+                delete activeSources[activeId];
+            });
+
+            // Nếu chưa preload xong buffer (fallback phát trực tiếp)
+            if (!buffer) {
+                const audioUrl = btn.getAttribute('data-audio');
+                const audio = new Audio(audioUrl);
+                audio.play();
+                
+                if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
+                btn.classList.add('playing');
+                btn.bounceTimeout = setTimeout(() => {
+                    btn.classList.remove('playing');
+                }, 1000);
+                return;
+            }
+
+            // Phát bằng Web Audio API
+            const source = ctx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(ctx.destination);
+            
+            activeSources[id] = source;
 
             if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
             btn.classList.add('playing');
@@ -759,14 +805,13 @@
                 btn.classList.remove('playing');
             }, 1000);
 
-            const playPromise = audio.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    btn.classList.remove('playing');
-                    if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
-                    showToast("Lỗi khi phát âm thanh!");
-                });
-            }
+            source.start(0);
+
+            source.onended = () => {
+                if (activeSources[id] === source) {
+                    delete activeSources[id];
+                }
+            };
         }
 
         // Tạo audio element ẩn và preload động khi hover/touch
@@ -778,27 +823,14 @@
                 if (!btn) return;
                 const audioUrl = btn.getAttribute('data-audio');
                 
-                // Tạo audio element ẩn
-                const audio = document.createElement('audio');
-                audio.id = `audio-element-${id}`;
-                audio.src = audioUrl;
-                audio.preload = 'none';
-                card.appendChild(audio);
-
-                // Preload khi di chuột vào card
+                // Preload bằng Web Audio API khi di chuột vào card
                 card.addEventListener('mouseenter', () => {
-                    if (audio.preload !== 'auto') {
-                        audio.preload = 'auto';
-                        audio.load();
-                    }
+                    preloadSound(id, audioUrl);
                 }, { once: true });
 
-                // Preload khi chạm vào trên mobile
+                // Preload bằng Web Audio API khi chạm vào trên mobile
                 card.addEventListener('touchstart', () => {
-                    if (audio.preload !== 'auto') {
-                        audio.preload = 'auto';
-                        audio.load();
-                    }
+                    preloadSound(id, audioUrl);
                 }, { once: true });
             });
         }
