@@ -707,8 +707,7 @@
                         <!-- Direct download MP3 Button -->
                         <a 
                             id="download-btn-{{ $sound->id }}"
-                            href="{{ $audioUrl }}" 
-                            download="{{ $sound->slug }}.mp3" 
+                            href="{{ url('/download/' . $sound->id) }}" 
                             class="action-btn" 
                             title="Tải nhạc MP3" 
                             aria-label="Download {{ $sound->title }}">
@@ -770,13 +769,21 @@
         let audioCtx = null;
         const audioBuffers = {}; // Caches decoded buffers: { id: AudioBuffer }
         let activeSources = [];  // Tracks active source items: { id, source, btn }
-        let fallbackAudio = null; // Single HTML5 audio fallback player to prevent overlapping fallback sounds
+        let fallbackAudioPlayer = null; // Single reusable HTML5 audio fallback player to prevent overlapping fallback sounds
 
         function getAudioContext() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
             return audioCtx;
+        }
+
+        function getFallbackAudioPlayer() {
+            if (!fallbackAudioPlayer) {
+                fallbackAudioPlayer = new Audio();
+                fallbackAudioPlayer.preload = 'auto';
+            }
+            return fallbackAudioPlayer;
         }
 
         // Tải trước và giải mã âm thanh bằng Web Audio API
@@ -827,11 +834,10 @@
             }
 
             // 1. Dừng mọi luồng âm thanh đang phát (cả fallback và Web Audio)
-            if (fallbackAudio) {
+            if (fallbackAudioPlayer) {
                 try {
-                    fallbackAudio.pause();
+                    fallbackAudioPlayer.pause();
                 } catch(e) {}
-                fallbackAudio = null;
             }
 
             activeSources.forEach(item => {
@@ -847,17 +853,34 @@
 
             const buffer = audioBuffers[id];
 
-            // 2. Nếu chưa preload xong buffer (fallback phát trực tiếp)
+            // 2. Nếu chưa preload xong buffer (fallback phát trực tiếp qua single Audio element)
             if (!buffer) {
                 const audioUrl = btn.getAttribute('data-audio');
-                fallbackAudio = new Audio(audioUrl);
-                fallbackAudio.play();
+                const player = getFallbackAudioPlayer();
+                player.src = audioUrl;
+                player.load();
+                player.play().catch(e => console.error("Fallback play failed:", e));
                 
+                // Giả lập source item để có thể dừng khi bấm nút khác
+                const sourceItem = { 
+                    id: id, 
+                    source: { stop: () => { try { player.pause(); } catch(e){} } }, 
+                    btn: btn 
+                };
+                activeSources.push(sourceItem);
+
                 if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
                 btn.classList.add('playing');
+                
+                player.onended = () => {
+                    btn.classList.remove('playing');
+                    activeSources = activeSources.filter(item => item !== sourceItem);
+                };
+
+                // Bounce hiệu ứng nút bấm tối đa 1.5s nếu audio chạy dài
                 btn.bounceTimeout = setTimeout(() => {
                     btn.classList.remove('playing');
-                }, 1000);
+                }, 1500);
                 return;
             }
 
@@ -871,21 +894,25 @@
 
             if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
             btn.classList.add('playing');
-            btn.bounceTimeout = setTimeout(() => {
-                btn.classList.remove('playing');
-            }, 1000);
-
+            
             source.start(0);
 
             source.onended = () => {
+                btn.classList.remove('playing');
                 activeSources = activeSources.filter(item => item !== sourceItem);
             };
+
+            btn.bounceTimeout = setTimeout(() => {
+                btn.classList.remove('playing');
+            }, 1000);
         }
 
-        // Tạo audio element ẩn và preload động khi hover/touch
+        // Tạo audio element ẩn và preload động khi hover/touch, đồng thời preload 12 nút đầu tiên
         function setupPreload() {
             const cards = document.querySelectorAll('.sound-card');
-            cards.forEach(card => {
+            const topPreloadCount = 12;
+
+            cards.forEach((card, index) => {
                 const id = card.id.replace('card-', '');
                 const btn = document.getElementById(`play-btn-${id}`);
                 if (!btn) return;
@@ -900,6 +927,17 @@
                 card.addEventListener('touchstart', () => {
                     preloadSound(id, audioUrl);
                 }, { once: true });
+
+                // Tự động tải trước 12 âm thanh đầu tiên sau khi load xong trang để chơi tức thì
+                if (index < topPreloadCount) {
+                    if (document.readyState === 'complete') {
+                        setTimeout(() => preloadSound(id, audioUrl), index * 100);
+                    } else {
+                        window.addEventListener('load', () => {
+                            setTimeout(() => preloadSound(id, audioUrl), index * 100);
+                        });
+                    }
+                }
             });
         }
 

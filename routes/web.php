@@ -6,8 +6,6 @@ use App\Models\TiengDongSound;
 use Illuminate\Http\Request;
 
 Route::get('/', function (Request $request) {
-    $categories = TiengDongCategory::orderBy('name')->get();
-    
     $query = TiengDongSound::with('category')->orderBy('id', 'desc');
     
     // Filter by Category
@@ -30,7 +28,13 @@ Route::get('/', function (Request $request) {
     
     $sounds = $query->paginate(48)->withQueryString();
     
-    return view('welcome', compact('categories', 'sounds', 'searchQuery'));
+    return view('welcome', compact('sounds', 'searchQuery'));
+});
+
+Route::get('/download/{id}', function ($id) {
+    $sound = TiengDongSound::findOrFail($id);
+    $audioUrl = $sound->local_path ? asset($sound->local_path) : $sound->mp3_url;
+    return redirect($audioUrl);
 });
 
 Route::get('/instant/{slug_with_id}', function ($slug_with_id) {

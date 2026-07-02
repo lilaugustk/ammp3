@@ -326,6 +326,16 @@
             flex-wrap: wrap;
         }
 
+        @keyframes pulse-loading {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(0.95); opacity: 0.6; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .instant-btn-large.loading {
+            animation: pulse-loading 1s infinite ease-in-out;
+            cursor: wait;
+        }
+
         .large-action-btn {
             background-color: #1f2937;
             border: 1px solid var(--border-color);
@@ -847,6 +857,8 @@
             return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
         }
 
+        let playRequested = false;
+
         // Fetch and decode sound fully in memory
         async function preloadSound() {
             try {
@@ -858,8 +870,17 @@
                 // Update duration UI once loaded
                 durationEl.textContent = formatTime(audioBuffer.duration);
                 progressSlider.max = audioBuffer.duration;
+
+                // Play automatically if play was requested
+                if (playRequested) {
+                    playRequested = false;
+                    playBtn.classList.remove('loading');
+                    startPlayback();
+                }
             } catch (e) {
                 console.error("Failed to preload sound", e);
+                playRequested = false;
+                playBtn.classList.remove('loading');
             }
         }
 
@@ -898,6 +919,16 @@
             if (isPlaying) {
                 pauseAudio();
             } else {
+                if (!audioBuffer) {
+                    if (playRequested) {
+                        playRequested = false;
+                        playBtn.classList.remove('loading');
+                    } else {
+                        playRequested = true;
+                        playBtn.classList.add('loading');
+                    }
+                    return;
+                }
                 startPlayback();
             }
         }
