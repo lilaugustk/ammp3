@@ -439,7 +439,7 @@
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            height: 38px;
+            height: 2.8em;
             line-height: 1.4;
         }
 

@@ -408,7 +408,7 @@
             font-size: 12px;
             font-weight: 600;
             text-decoration: none;
-            height: 36px;
+            height: 2.8em;
             overflow: hidden;
             display: -webkit-box;
             -webkit-line-clamp: 2;
