@@ -799,7 +799,7 @@
             color: #ffffff;
             margin-bottom: 20px;
             text-align: left;
-            border-left: 4px solid #ef4444;
+            /* border-left: 4px solid #ef4444; */
             padding-left: 10px;
         }
 
@@ -968,7 +968,7 @@
 
         @media (max-width: 768px) {
             .topics-grid {
-                flex-wrap: nowrap;
+                /* flex-wrap: nowrap; */
                 overflow-x: auto;
                 padding-bottom: 12px;
                 scrollbar-width: none;
@@ -1116,14 +1116,27 @@
             </div>
 
             <!-- File Information Table -->
-            <div class="file-info-box" style="margin-top: 30px; text-align: left; max-width: 500px; width: 100%; border-top: 1px solid var(--border-color); padding-top: 20px;">
+            @php
+                $fileSizeStr = 'Không rõ';
+                if ($sound->local_path && file_exists(public_path($sound->local_path))) {
+                    $bytes = filesize(public_path($sound->local_path));
+                    if ($bytes >= 1048576) {
+                        $fileSizeStr = number_format($bytes / 1048576, 2) . ' MB';
+                    } elseif ($bytes >= 1024) {
+                        $fileSizeStr = number_format($bytes / 1024, 0) . ' KB';
+                    } else {
+                        $fileSizeStr = $bytes . ' Bytes';
+                    }
+                }
+            @endphp
+            <div class="file-info-box" style="text-align: left; width: 100%; padding-top: 20px;">
                 <table style="width: 100%; border-collapse: collapse; font-size: 13.5px; color: var(--text-muted); margin-bottom: 20px;">
                     <tbody>
-                        <tr style="border-bottom: 1px solid var(--border-color);">
+                        <tr>
                             <td style="padding: 8px 0; font-weight: 600; color: #ffffff; width: 120px;">Bản quyền:</td>
                             <td style="padding: 8px 0;">Miễn phí (Free)</td>
                         </tr>
-                        <tr style="border-bottom: 1px solid var(--border-color);">
+                        <tr>
                             <td style="padding: 8px 0; font-weight: 600; color: #ffffff;">Thể loại:</td>
                             <td style="padding: 8px 0;">
                                 <a href="{{ url('/?category=' . ($sound->category->slug ?? '')) }}" style="color: #3b82f6; text-decoration: none; font-weight: 600;">
@@ -1131,13 +1144,17 @@
                                 </a>
                             </td>
                         </tr>
-                        <tr style="border-bottom: 1px solid var(--border-color);">
+                        <tr>
                             <td style="padding: 8px 0; font-weight: 600; color: #ffffff;">Định dạng:</td>
                             <td style="padding: 8px 0;">.mp3</td>
                         </tr>
-                        <tr style="border-bottom: 1px solid var(--border-color);">
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: 600; color: #ffffff;">Dung lượng:</td>
+                            <td style="padding: 8px 0;">{{ $fileSizeStr }}</td>
+                        </tr>
+                        <tr>
                             <td style="padding: 8px 0; font-weight: 600; color: #ffffff;">Chất lượng:</td>
-                            <td style="padding: 8px 0;">320 kbps (HQ)</td>
+                            <td style="padding: 8px 0;">Chất lượng gốc (HQ)</td>
                         </tr>
                         <tr>
                             <td style="padding: 8px 0; font-weight: 600; color: #ffffff;">Cung cấp bởi:</td>

@@ -243,7 +243,7 @@
             color: #ffffff;
             margin-bottom: 15px;
             text-align: left;
-            border-left: 4px solid #ef4444;
+            /* border-left: 4px solid #ef4444; */
             padding-left: 10px;
         }
 
