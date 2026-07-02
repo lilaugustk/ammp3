@@ -4,27 +4,66 @@ use Illuminate\Support\Facades\Route;
 use App\Models\TiengDongCategory;
 use App\Models\TiengDongSound;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 Route::get('/', function (Request $request) {
-    $query = TiengDongSound::with('category')->orderBy('id', 'desc');
-    
     // Filter by Category parameter (redirect to clean SEO URL)
     $categorySlug = $request->query('category', '');
     if ($categorySlug && $categorySlug !== 'all') {
         return redirect('/' . $categorySlug, 301);
     }
     
-    // Filter by Search query
+    $page = $request->query('page', 1);
     $searchQuery = $request->query('s', '');
-    if ($searchQuery) {
-        // Simple search on title or slug
-        $query->where(function($q) use ($searchQuery) {
-            $q->where('title', 'like', '%' . $searchQuery . '%')
-              ->orWhere('slug', 'like', '%' . $searchQuery . '%');
-        });
-    }
+    $cacheKey = "home_sounds_page_{$page}_search_" . md5($searchQuery);
     
-    $sounds = $query->paginate(24)->withQueryString();
+    $soundsData = Cache::remember($cacheKey, 3600, function () use ($searchQuery) {
+        $query = TiengDongSound::with('category')->orderBy('id', 'desc');
+        if ($searchQuery) {
+            // Simple search on title or slug
+            $query->where(function($q) use ($searchQuery) {
+                $q->where('title', 'like', '%' . $searchQuery . '%')
+                  ->orWhere('slug', 'like', '%' . $searchQuery . '%');
+            });
+        }
+        $paginator = $query->paginate(24);
+        return [
+            'items' => $paginator->getCollection()->map(function($sound) {
+                return $sound->toArray();
+            })->toArray(),
+            'total' => $paginator->total(),
+            'perPage' => $paginator->perPage(),
+            'currentPage' => $paginator->currentPage(),
+        ];
+    });
+    
+    $items = collect($soundsData['items'])->map(function($item) {
+        $sound = new TiengDongSound();
+        $sound->exists = true;
+        
+        $categoryData = $item['category'] ?? null;
+        unset($item['category']);
+        
+        $sound->setRawAttributes($item, true);
+        
+        if ($categoryData) {
+            $cat = new TiengDongCategory();
+            $cat->exists = true;
+            $cat->setRawAttributes($categoryData, true);
+            $sound->setRelation('category', $cat);
+        }
+        return $sound;
+    });
+    
+    $sounds = new \Illuminate\Pagination\LengthAwarePaginator(
+        $items,
+        $soundsData['total'],
+        $soundsData['perPage'],
+        $soundsData['currentPage'],
+        ['path' => $request->url(), 'query' => $request->query()]
+    );
+    
+    $sounds->withQueryString();
     
     $pageTitle = 'Tải hiệu ứng âm thanh, tiếng động miễn phí | AMMP3.com';
     $pageDescription = 'Nghe và tải xuống hàng ngàn hiệu ứng âm thanh meme, tiếng cười, câu nói viral độc đáo nhất trên AMMP3.com. Giao diện soundboard đơn giản, cực nhanh, miễn phí!';
@@ -45,18 +84,56 @@ Route::get('/instant/{slug_with_id}', function ($slug_with_id) {
 Route::get('/tag/{slug}', function ($slug, Request $request) {
     $tag = App\Models\TiengDongTag::where('slug', $slug)->firstOrFail();
     
-    $query = $tag->sounds()->with('category')->orderBy('id', 'desc');
-    
-    // Filter by search query if any
+    $page = $request->query('page', 1);
     $searchQuery = $request->query('s', '');
-    if ($searchQuery) {
-        $query->where(function($q) use ($searchQuery) {
-            $q->where('title', 'like', '%' . $searchQuery . '%')
-              ->orWhere('slug', 'like', '%' . $searchQuery . '%');
-        });
-    }
+    $cacheKey = "tag_sounds_{$slug}_page_{$page}_search_" . md5($searchQuery);
     
-    $sounds = $query->paginate(24)->withQueryString();
+    $soundsData = Cache::remember($cacheKey, 3600, function () use ($tag, $searchQuery) {
+        $query = $tag->sounds()->with('category')->orderBy('id', 'desc');
+        if ($searchQuery) {
+            $query->where(function($q) use ($searchQuery) {
+                $q->where('title', 'like', '%' . $searchQuery . '%')
+                  ->orWhere('slug', 'like', '%' . $searchQuery . '%');
+            });
+        }
+        $paginator = $query->paginate(24);
+        return [
+            'items' => $paginator->getCollection()->map(function($sound) {
+                return $sound->toArray();
+            })->toArray(),
+            'total' => $paginator->total(),
+            'perPage' => $paginator->perPage(),
+            'currentPage' => $paginator->currentPage(),
+        ];
+    });
+    
+    $items = collect($soundsData['items'])->map(function($item) {
+        $sound = new TiengDongSound();
+        $sound->exists = true;
+        
+        $categoryData = $item['category'] ?? null;
+        unset($item['category']);
+        
+        $sound->setRawAttributes($item, true);
+        
+        if ($categoryData) {
+            $cat = new TiengDongCategory();
+            $cat->exists = true;
+            $cat->setRawAttributes($categoryData, true);
+            $sound->setRelation('category', $cat);
+        }
+        return $sound;
+    });
+    
+    $sounds = new \Illuminate\Pagination\LengthAwarePaginator(
+        $items,
+        $soundsData['total'],
+        $soundsData['perPage'],
+        $soundsData['currentPage'],
+        ['path' => $request->url(), 'query' => $request->query()]
+    );
+    
+    $sounds->withQueryString();
     
     return view('tag', compact('tag', 'sounds', 'searchQuery'));
 });
@@ -114,17 +191,56 @@ Route::get('/{slug}', function ($slug, Request $request) {
     // 2. Otherwise, check if it's a category page
     $category = App\Models\TiengDongCategory::where('slug', $slug)->first();
     if ($category) {
-        $query = $category->sounds()->with('category')->orderBy('id', 'desc');
-        
+        $page = $request->query('page', 1);
         $searchQuery = $request->query('s', '');
-        if ($searchQuery) {
-            $query->where(function($q) use ($searchQuery) {
-                $q->where('title', 'like', '%' . $searchQuery . '%')
-                  ->orWhere('slug', 'like', '%' . $searchQuery . '%');
-            });
-        }
+        $cacheKey = "category_sounds_{$slug}_page_{$page}_search_" . md5($searchQuery);
         
-        $sounds = $query->paginate(24)->withQueryString();
+        $soundsData = Cache::remember($cacheKey, 3600, function () use ($category, $searchQuery) {
+            $query = $category->sounds()->with('category')->orderBy('id', 'desc');
+            if ($searchQuery) {
+                $query->where(function($q) use ($searchQuery) {
+                    $q->where('title', 'like', '%' . $searchQuery . '%')
+                      ->orWhere('slug', 'like', '%' . $searchQuery . '%');
+                });
+            }
+            $paginator = $query->paginate(24);
+            return [
+                'items' => $paginator->getCollection()->map(function($sound) {
+                    return $sound->toArray();
+                })->toArray(),
+                'total' => $paginator->total(),
+                'perPage' => $paginator->perPage(),
+                'currentPage' => $paginator->currentPage(),
+            ];
+        });
+        
+        $items = collect($soundsData['items'])->map(function($item) {
+            $sound = new TiengDongSound();
+            $sound->exists = true;
+            
+            $categoryData = $item['category'] ?? null;
+            unset($item['category']);
+            
+            $sound->setRawAttributes($item, true);
+            
+            if ($categoryData) {
+                $cat = new TiengDongCategory();
+                $cat->exists = true;
+                $cat->setRawAttributes($categoryData, true);
+                $sound->setRelation('category', $cat);
+            }
+            return $sound;
+        });
+        
+        $sounds = new \Illuminate\Pagination\LengthAwarePaginator(
+            $items,
+            $soundsData['total'],
+            $soundsData['perPage'],
+            $soundsData['currentPage'],
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+        
+        $sounds->withQueryString();
         $activeCategory = $category;
         
         $pageTitle = "Tải hiệu ứng âm thanh " . $category->name . " Mp3 miễn phí - AMMP3.com";
