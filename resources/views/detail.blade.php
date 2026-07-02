@@ -811,17 +811,13 @@
 
     <!-- JS Audio & Favorites Logic -->
     <script>
-        let audioCtx = null;
-        let audioBuffer = null;
-        let activeSource = null;
-        let startTime = 0; // AudioContext time when source started playing
-        let startOffset = 0; // Playback offset in seconds
-        let isPlaying = false;
-        let playTimer = null;
-
         const soundId = "{{ $sound->id }}";
         const audioUrl = "{{ $audioUrl }}";
         const favoritedIds = JSON.parse(localStorage.getItem('fav_sounds') || '[]');
+
+        // Native HTML5 Audio Element - supports streaming and instant playback
+        const audio = new Audio(audioUrl);
+        audio.preload = 'auto'; // Load automatically on detail page load
 
         const playBtn = document.getElementById('play-btn');
         const playerPlayBtn = document.getElementById('player-play-btn');
@@ -835,21 +831,9 @@
         const volumeIcon = document.getElementById('volume-icon');
         const muteIcon = document.getElementById('mute-icon');
 
-        // Volume node
-        let gainNode = null;
-        let currentVolume = 1.0;
-        let isMuted = false;
+        let isDragging = false;
 
-        function getAudioContext() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                gainNode = audioCtx.createGain();
-                gainNode.connect(audioCtx.destination);
-            }
-            return audioCtx;
-        }
-
-        // Helper to format time (e.g. 0:05)
+        // Helper to format time
         function formatTime(seconds) {
             if (isNaN(seconds) || seconds < 0) return '0:00';
             const mins = Math.floor(seconds / 60);
@@ -857,154 +841,69 @@
             return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
         }
 
-        let playRequested = false;
-
-        // Fetch and decode sound fully in memory
-        async function preloadSound() {
-            try {
-                const response = await fetch(audioUrl);
-                const arrayBuffer = await response.arrayBuffer();
-                const ctx = getAudioContext();
-                audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-                
-                // Update duration UI once loaded
-                durationEl.textContent = formatTime(audioBuffer.duration);
-                progressSlider.max = audioBuffer.duration;
-
-                // Play automatically if play was requested
-                if (playRequested) {
-                    playRequested = false;
-                    playBtn.classList.remove('loading');
-                    startPlayback();
-                }
-            } catch (e) {
-                console.error("Failed to preload sound", e);
-                playRequested = false;
-                playBtn.classList.remove('loading');
-            }
-        }
-
+        // Initialize when page loads
         document.addEventListener('DOMContentLoaded', () => {
             initFavoriteUI();
             setupDropdown();
-            preloadSound();
+            
+            // Listen to metadata loaded
+            audio.addEventListener('loadedmetadata', () => {
+                durationEl.textContent = formatTime(audio.duration);
+                progressSlider.max = audio.duration;
+            });
 
-            // Drag and seek listeners
-            progressSlider.addEventListener('mousedown', () => progressSlider.dataset.dragging = 'true');
+            // Listen to time updates
+            audio.addEventListener('timeupdate', () => {
+                if (!isDragging) {
+                    progressSlider.value = audio.currentTime;
+                    currentTimeEl.textContent = formatTime(audio.currentTime);
+                }
+            });
+
+            // Audio ended
+            audio.addEventListener('ended', () => {
+                resetPlayerState();
+            });
+
+            // Progress Slider interactions
+            progressSlider.addEventListener('mousedown', () => isDragging = true);
+            progressSlider.addEventListener('touchstart', () => isDragging = true);
+
             progressSlider.addEventListener('mouseup', () => {
-                delete progressSlider.dataset.dragging;
-                seekAudio(parseFloat(progressSlider.value));
+                isDragging = false;
+                audio.currentTime = parseFloat(progressSlider.value);
             });
-            progressSlider.addEventListener('touchstart', () => progressSlider.dataset.dragging = 'true');
             progressSlider.addEventListener('touchend', () => {
-                delete progressSlider.dataset.dragging;
-                seekAudio(parseFloat(progressSlider.value));
+                isDragging = false;
+                audio.currentTime = parseFloat(progressSlider.value);
             });
+
             progressSlider.addEventListener('input', () => {
                 currentTimeEl.textContent = formatTime(parseFloat(progressSlider.value));
             });
         });
 
-        // Play/Pause toggles
         function playAudio(btn) {
             togglePlay();
         }
 
         function togglePlay() {
-            const ctx = getAudioContext();
-            if (ctx.state === 'suspended') {
-                ctx.resume();
-            }
-
-            if (isPlaying) {
-                pauseAudio();
+            if (audio.paused) {
+                // Play
+                audio.play().catch(e => console.error("Playback failed:", e));
+                playBtn.classList.add('playing');
+                playIcon.style.display = 'none';
+                pauseIcon.style.display = 'block';
             } else {
-                if (!audioBuffer) {
-                    if (playRequested) {
-                        playRequested = false;
-                        playBtn.classList.remove('loading');
-                    } else {
-                        playRequested = true;
-                        playBtn.classList.add('loading');
-                    }
-                    return;
-                }
-                startPlayback();
+                // Pause
+                audio.pause();
+                playBtn.classList.remove('playing');
+                playIcon.style.display = 'block';
+                pauseIcon.style.display = 'none';
             }
         }
 
-        function startPlayback() {
-            if (!audioBuffer) return; // Wait until decoded
-            const ctx = getAudioContext();
-
-            if (activeSource) {
-                try { activeSource.stop(); } catch(e) {}
-            }
-
-            const source = ctx.createBufferSource();
-            source.buffer = audioBuffer;
-            source.connect(gainNode);
-
-            if (startOffset >= audioBuffer.duration) {
-                startOffset = 0;
-            }
-
-            activeSource = source;
-            startTime = ctx.currentTime;
-            isPlaying = true;
-
-            playBtn.classList.add('playing');
-            playIcon.style.display = 'none';
-            pauseIcon.style.display = 'block';
-
-            source.start(0, startOffset);
-
-            source.onended = () => {
-                if (activeSource === source) {
-                    const elapsed = ctx.currentTime - startTime;
-                    if (startOffset + elapsed >= audioBuffer.duration - 0.05) {
-                        resetPlayerToEnded();
-                    }
-                }
-            };
-
-            if (playTimer) clearInterval(playTimer);
-            playTimer = setInterval(updateUI, 50);
-        }
-
-        function pauseAudio() {
-            if (!isPlaying) return;
-            const ctx = getAudioContext();
-
-            isPlaying = false;
-            if (activeSource) {
-                try { activeSource.stop(); } catch(e) {}
-                activeSource = null;
-            }
-
-            startOffset += (ctx.currentTime - startTime);
-            if (startOffset > audioBuffer.duration) {
-                startOffset = audioBuffer.duration;
-            }
-
-            if (playTimer) {
-                clearInterval(playTimer);
-                playTimer = null;
-            }
-
-            playBtn.classList.remove('playing');
-            playIcon.style.display = 'block';
-            pauseIcon.style.display = 'none';
-        }
-
-        function resetPlayerToEnded() {
-            isPlaying = false;
-            activeSource = null;
-            startOffset = 0;
-            if (playTimer) {
-                clearInterval(playTimer);
-                playTimer = null;
-            }
+        function resetPlayerState() {
             playBtn.classList.remove('playing');
             playIcon.style.display = 'block';
             pauseIcon.style.display = 'none';
@@ -1012,57 +911,27 @@
             currentTimeEl.textContent = '0:00';
         }
 
-        function updateUI() {
-            if (!isPlaying || !audioBuffer) return;
-            const ctx = getAudioContext();
-            const current = startOffset + (ctx.currentTime - startTime);
-
-            if (current <= audioBuffer.duration) {
-                if (!progressSlider.dataset.dragging) {
-                    progressSlider.value = current;
-                    currentTimeEl.textContent = formatTime(current);
-                }
-            }
-        }
-
-        function seekAudio(value) {
-            if (!audioBuffer) return;
-            startOffset = value;
-
-            if (isPlaying) {
-                startPlayback();
-            } else {
-                currentTimeEl.textContent = formatTime(startOffset);
-                progressSlider.value = startOffset;
-            }
-        }
-
         // Volume Controls
         function setVolume(val) {
-            currentVolume = parseFloat(val);
-            if (gainNode) {
-                gainNode.gain.setValueAtTime(isMuted ? 0 : currentVolume, getAudioContext().currentTime);
-            }
+            audio.volume = parseFloat(val);
+            audio.muted = false;
             updateVolumeUI();
         }
 
         function toggleMute() {
-            isMuted = !isMuted;
-            if (gainNode) {
-                gainNode.gain.setValueAtTime(isMuted ? 0 : currentVolume, getAudioContext().currentTime);
-            }
+            audio.muted = !audio.muted;
             updateVolumeUI();
         }
 
         function updateVolumeUI() {
-            if (isMuted || currentVolume === 0) {
+            if (audio.muted || audio.volume === 0) {
                 volumeIcon.style.display = 'none';
                 muteIcon.style.display = 'block';
                 volumeSlider.value = 0;
             } else {
                 volumeIcon.style.display = 'block';
                 muteIcon.style.display = 'none';
-                volumeSlider.value = currentVolume;
+                volumeSlider.value = audio.volume;
             }
         }
 
@@ -1096,19 +965,17 @@
             }
         }
 
-        // Đăng ký và quản lý dropdown danh mục (đóng/mở bằng click & hover)
+        // Dropdown setup
         function setupDropdown() {
             const dropdown = document.getElementById('categoryDropdown');
             const btn = document.getElementById('categoryDropdownBtn');
             if (!dropdown || !btn) return;
 
-            // Toggle khi click vào nút Danh mục
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 dropdown.classList.toggle('show-menu');
             });
 
-            // Đóng khi click ra bên ngoài
             document.addEventListener('click', (e) => {
                 if (!dropdown.contains(e.target)) {
                     dropdown.classList.remove('show-menu');

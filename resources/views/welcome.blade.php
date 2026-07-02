@@ -765,38 +765,24 @@
 
     <!-- JS Audio & Search Logic -->
     <script>
-        // Web Audio API - Cực nhanh, phát không độ trễ
-        let audioCtx = null;
-        const audioBuffers = {}; // Caches decoded buffers: { id: AudioBuffer }
-        let activeSources = [];  // Tracks active source items: { id, source, btn }
-        let fallbackAudioPlayer = null; // Single reusable HTML5 audio fallback player to prevent overlapping fallback sounds
+        const audioElements = {}; // Caches HTML5 Audio objects: { id: Audio }
+        let currentlyPlayingId = null;
 
-        function getAudioContext() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function getAudio(id, url) {
+            if (!audioElements[id]) {
+                const audio = new Audio(url);
+                audio.preload = 'none';
+                audioElements[id] = audio;
             }
-            return audioCtx;
+            return audioElements[id];
         }
 
-        function getFallbackAudioPlayer() {
-            if (!fallbackAudioPlayer) {
-                fallbackAudioPlayer = new Audio();
-                fallbackAudioPlayer.preload = 'auto';
-            }
-            return fallbackAudioPlayer;
-        }
-
-        // Tải trước và giải mã âm thanh bằng Web Audio API
-        async function preloadSound(id, url) {
-            if (audioBuffers[id]) return;
-            try {
-                const response = await fetch(url);
-                const arrayBuffer = await response.arrayBuffer();
-                const ctx = getAudioContext();
-                const decodedData = await ctx.decodeAudioData(arrayBuffer);
-                audioBuffers[id] = decodedData;
-            } catch (e) {
-                console.error("Failed to preload sound: " + id, e);
+        // Tải trước âm thanh
+        function preloadSound(id, url) {
+            const audio = getAudio(id, url);
+            if (audio.preload !== 'auto') {
+                audio.preload = 'auto';
+                audio.load(); // Kích hoạt tải trước
             }
         }
 
@@ -828,83 +814,55 @@
 
         // Hàm phát âm thanh
         function playAudio(btn, id) {
-            const ctx = getAudioContext();
-            if (ctx.state === 'suspended') {
-                ctx.resume();
-            }
+            const audioUrl = btn.getAttribute('data-audio');
+            const audio = getAudio(id, audioUrl);
 
-            // 1. Dừng mọi luồng âm thanh đang phát (cả fallback và Web Audio)
-            if (fallbackAudioPlayer) {
-                try {
-                    fallbackAudioPlayer.pause();
-                } catch(e) {}
-            }
-
-            activeSources.forEach(item => {
-                try {
-                    item.source.stop();
-                } catch(e) {}
-                if (item.btn) {
-                    item.btn.classList.remove('playing');
-                    if (item.btn.bounceTimeout) clearTimeout(item.btn.bounceTimeout);
+            // 1. Dừng mọi luồng âm thanh khác đang phát
+            Object.keys(audioElements).forEach(key => {
+                if (key !== id) {
+                    const otherAudio = audioElements[key];
+                    otherAudio.pause();
+                    otherAudio.currentTime = 0;
+                    const otherBtn = document.getElementById(`play-btn-${key}`);
+                    if (otherBtn) {
+                        otherBtn.classList.remove('playing');
+                        if (otherBtn.bounceTimeout) clearTimeout(otherBtn.bounceTimeout);
+                    }
                 }
             });
-            activeSources = [];
 
-            const buffer = audioBuffers[id];
-
-            // 2. Nếu chưa preload xong buffer (fallback phát trực tiếp qua single Audio element)
-            if (!buffer) {
-                const audioUrl = btn.getAttribute('data-audio');
-                const player = getFallbackAudioPlayer();
-                player.src = audioUrl;
-                player.load();
-                player.play().catch(e => console.error("Fallback play failed:", e));
-                
-                // Giả lập source item để có thể dừng khi bấm nút khác
-                const sourceItem = { 
-                    id: id, 
-                    source: { stop: () => { try { player.pause(); } catch(e){} } }, 
-                    btn: btn 
-                };
-                activeSources.push(sourceItem);
-
-                if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
-                btn.classList.add('playing');
-                
-                player.onended = () => {
-                    btn.classList.remove('playing');
-                    activeSources = activeSources.filter(item => item !== sourceItem);
-                };
-
-                // Bounce hiệu ứng nút bấm tối đa 1.5s nếu audio chạy dài
-                btn.bounceTimeout = setTimeout(() => {
-                    btn.classList.remove('playing');
-                }, 1500);
+            // Nếu đang phát chính âm thanh này, nhấn lần nữa sẽ dừng lại
+            if (currentlyPlayingId === id && !audio.paused) {
+                audio.pause();
+                audio.currentTime = 0;
+                btn.classList.remove('playing');
+                currentlyPlayingId = null;
                 return;
             }
 
-            // 3. Phát bằng Web Audio API
-            const source = ctx.createBufferSource();
-            source.buffer = buffer;
-            source.connect(ctx.destination);
-            
-            const sourceItem = { id: id, source: source, btn: btn };
-            activeSources.push(sourceItem);
-
+            // 2. Kích hoạt hiệu ứng phát nhạc
             if (btn.bounceTimeout) clearTimeout(btn.bounceTimeout);
             btn.classList.add('playing');
-            
-            source.start(0);
+            currentlyPlayingId = id;
 
-            source.onended = () => {
+            // Phát trực tiếp dạng streaming cực nhanh
+            audio.play().catch(e => {
+                console.error("Playback failed:", e);
                 btn.classList.remove('playing');
-                activeSources = activeSources.filter(item => item !== sourceItem);
+                currentlyPlayingId = null;
+            });
+
+            audio.onended = () => {
+                btn.classList.remove('playing');
+                if (currentlyPlayingId === id) {
+                    currentlyPlayingId = null;
+                }
             };
 
+            // Bounce hiệu ứng nút bấm tối đa 1.5s nếu audio chạy dài
             btn.bounceTimeout = setTimeout(() => {
                 btn.classList.remove('playing');
-            }, 1000);
+            }, 1500);
         }
 
         // Tạo audio element ẩn và preload động khi hover/touch, đồng thời preload 12 nút đầu tiên
@@ -918,12 +876,15 @@
                 if (!btn) return;
                 const audioUrl = btn.getAttribute('data-audio');
                 
-                // Preload bằng Web Audio API khi di chuột vào card
+                // Khởi tạo audio object
+                getAudio(id, audioUrl);
+
+                // Preload khi di chuột vào card
                 card.addEventListener('mouseenter', () => {
                     preloadSound(id, audioUrl);
                 }, { once: true });
 
-                // Preload bằng Web Audio API khi chạm vào trên mobile
+                // Preload khi chạm vào trên mobile
                 card.addEventListener('touchstart', () => {
                     preloadSound(id, audioUrl);
                 }, { once: true });
