@@ -215,22 +215,61 @@
             border: 1px solid transparent;
             transition: all 0.2s;
             user-select: none;
+            text-decoration: none;
+            display: inline-block;
         }
 
         .category-pill:hover {
             background-color: #374151;
+            color: #ffffff;
         }
 
         .category-pill.active {
             background-color: #3b82f6;
             border-color: #60a5fa;
+            color: #ffffff;
         }
 
+        /* Section styling from detail page */
+        .suggested-topics-section {
+            width: 100%;
+            padding-top: 10px;
+            padding-bottom: 25px;
+        }
+
+        .related-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 15px;
+            text-align: left;
+            border-left: 4px solid #ef4444;
+            padding-left: 10px;
+        }
+
+        .topics-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: flex-start;
+            width: 100%;
+        }
+
+        .topic-pill {
+            display: inline-block;
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 9999px;
+            font-size: 13.5px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
         /* Sounds Grid */
         .sounds-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-            gap: 24px 16px;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 12px 8px;
             justify-content: center;
         }
 
@@ -240,7 +279,7 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
-            max-width: 125px;
+            max-width: 140px;
             margin: 0 auto;
             position: relative;
         }
@@ -389,7 +428,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 10px;
             margin-top: auto;
         }
 
@@ -398,19 +437,21 @@
             border: none;
             cursor: pointer;
             color: var(--text-muted);
-            padding: 3px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 24px;
-            height: 24px;
+            width: 38px;
+            height: 38px;
             transition: all 0.2s;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .action-btn:hover {
-            color: #ffffff;
-            background-color: #1f2937;
+        @media (hover: hover) {
+            .action-btn:hover {
+                color: #ffffff;
+            }
         }
 
         .action-btn.active-fav {
@@ -418,8 +459,8 @@
         }
 
         .action-btn svg {
-            width: 14px;
-            height: 14px;
+            width: 22px;
+            height: 22px;
             fill: currentColor;
         }
 
@@ -435,8 +476,6 @@
         }
 
         .pagination-btn {
-            background-color: #1f2937;
-            border: 1px solid var(--border-color);
             color: #ffffff;
             font-size: 14px;
             font-weight: 600;
@@ -666,7 +705,6 @@
             <h1 class="hero-title">{{ isset($activeCategory) ? 'Hiệu ứng âm thanh ' . $activeCategory->name : 'AMMP3.com - Meme Soundboard' }}</h1>
             <p class="hero-desc">{{ isset($activeCategory) ? 'Nghe và tải xuống các hiệu ứng âm thanh thuộc danh mục ' . $activeCategory->name . ' chất lượng cao miễn phí phục vụ dựng phim, làm video.' : 'Click vào nút để phát âm thanh tức thì. Kho hiệu ứng âm thanh, tiếng động, tiếng cười, câu nói viral hài hước nhất dùng cho dựng video, livestream trên AMMP3.com.' }}</p>
         </section>
-
         <!-- Sounds Buttons Grid -->
         <section class="sounds-grid" id="soundsGrid">
             @php
@@ -691,7 +729,7 @@
                         </button>
                     </div>
                     
-                    <a href="{{ url('/instant/' . $sound->slug . '-' . $sound->id) }}" class="sound-title" title="{{ $sound->title }}" id="title-link-{{ $sound->id }}">
+                    <a href="{{ url('/' . $sound->slug . '-' . $sound->id) }}" class="sound-title" title="{{ $sound->title }}" id="title-link-{{ $sound->id }}">
                         {{ $sound->title }}
                     </a>
                     
@@ -706,13 +744,13 @@
                             <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                         </button>
 
-                        <!-- Copy URL Button -->
+                         <!-- Copy URL Button -->
                         <button 
                             id="copy-btn-{{ $sound->id }}"
                             class="action-btn" 
                             title="Copy link liên kết" 
                             aria-label="Copy link {{ $sound->title }}"
-                            onclick="copyLink('{{ url('/instant/' . $sound->slug . '-' . $sound->id) }}')">
+                            onclick="copyLink('{{ url('/' . $sound->slug . '-' . $sound->id) }}')">
                             <svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
                         </button>
 
@@ -756,6 +794,39 @@
                     <span class="pagination-btn disabled">Sau</span>
                 @endif
             </nav>
+        @endif
+
+
+        <!-- Categories Section -->
+        @if(isset($globalCategories) && count($globalCategories) > 0)
+        <div class="suggested-topics-section">
+            <h2 class="related-title">
+                Thể loại
+            </h2>
+            <div class="topics-grid">
+                @foreach ($globalCategories as $cat)
+                    <a href="{{ url('/' . $cat->slug) }}" class="topic-pill {{ (isset($activeCategory) && $activeCategory->slug == $cat->slug) ? 'active' : '' }}">
+                        {{ $cat->name }}
+                    </a>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        <!-- Suggested Topics Section -->
+        @if(isset($globalTags) && count($globalTags) > 0)
+        <div class="suggested-topics-section" style="padding-top: 0; padding-bottom: 30px;">
+            <h2 class="related-title">
+                Chủ đề phổ biến
+            </h2>
+            <div class="topics-grid">
+                @foreach ($globalTags as $t)
+                    <a href="{{ url('/tag/' . $t->slug) }}" class="topic-pill">
+                        # {{ $t->name }}
+                    </a>
+                @endforeach
+            </div>
+        </div>
         @endif
 
     </main>

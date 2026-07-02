@@ -24,7 +24,7 @@ Route::get('/', function (Request $request) {
         });
     }
     
-    $sounds = $query->paginate(48)->withQueryString();
+    $sounds = $query->paginate(24)->withQueryString();
     
     $pageTitle = 'Tải hiệu ứng âm thanh, tiếng động miễn phí | AMMP3.com';
     $pageDescription = 'Nghe và tải xuống hàng ngàn hiệu ứng âm thanh meme, tiếng cười, câu nói viral độc đáo nhất trên AMMP3.com. Giao diện soundboard đơn giản, cực nhanh, miễn phí!';
@@ -39,15 +39,7 @@ Route::get('/download/{id}', function ($id) {
 });
 
 Route::get('/instant/{slug_with_id}', function ($slug_with_id) {
-    $parts = explode('-', $slug_with_id);
-    $id = end($parts);
-    
-    if (!is_numeric($id)) {
-        abort(404);
-    }
-    
-    $sound = TiengDongSound::with(['category', 'tags'])->findOrFail($id);
-    return view('detail', compact('sound'));
+    return redirect('/' . $slug_with_id, 301);
 });
 
 Route::get('/tag/{slug}', function ($slug, Request $request) {
@@ -64,7 +56,7 @@ Route::get('/tag/{slug}', function ($slug, Request $request) {
         });
     }
     
-    $sounds = $query->paginate(48)->withQueryString();
+    $sounds = $query->paginate(24)->withQueryString();
     
     return view('tag', compact('tag', 'sounds', 'searchQuery'));
 });
@@ -97,8 +89,30 @@ Route::post('/lien-he', function (Request $request) {
     ]);
 });
 
-Route::get('/{category_slug}', function ($category_slug, Request $request) {
-    $category = App\Models\TiengDongCategory::where('slug', $category_slug)->first();
+Route::get('/{slug}', function ($slug, Request $request) {
+    // 1. Try to check if it's a detail page (ends with -{id})
+    $parts = explode('-', $slug);
+    $id = end($parts);
+    
+    if (is_numeric($id)) {
+        $sound = TiengDongSound::with(['category', 'tags'])->find($id);
+        if ($sound) {
+            $tagIds = $sound->tags->pluck('id');
+            $relatedSounds = TiengDongSound::whereHas('tags', function($q) use ($tagIds) {
+                    $q->whereIn('tiengdong_tags.id', $tagIds);
+                })
+                ->where('id', '!=', $sound->id)
+                ->distinct()
+                ->orderBy('id', 'desc')
+                ->limit(12)
+                ->get();
+            
+            return view('detail', compact('sound', 'relatedSounds'));
+        }
+    }
+
+    // 2. Otherwise, check if it's a category page
+    $category = App\Models\TiengDongCategory::where('slug', $slug)->first();
     if ($category) {
         $query = $category->sounds()->with('category')->orderBy('id', 'desc');
         
@@ -110,13 +124,14 @@ Route::get('/{category_slug}', function ($category_slug, Request $request) {
             });
         }
         
-        $sounds = $query->paginate(48)->withQueryString();
+        $sounds = $query->paginate(24)->withQueryString();
         $activeCategory = $category;
         
-        $pageTitle = "Hiệu ứng âm thanh " . $category->name . " chất lượng cao - Tải MP3 | AMMP3.com";
-        $pageDescription = "Nghe và tải xuống các hiệu ứng âm thanh thuộc danh mục " . $category->name . " chất lượng cao miễn phí, phục vụ dựng video, làm phim, livestream trên AMMP3.com.";
+        $pageTitle = "Tải hiệu ứng âm thanh " . $category->name . " Mp3 miễn phí - AMMP3.com";
+        $pageDescription = "Tải hiệu ứng âm thanh danh mục " . $category->name . " Mp3 miễn phí chất lượng cao. Download âm thanh " . $category->name . " không bản quyền tốt nhất để dựng phim, làm video clip.";
         
         return view('welcome', compact('sounds', 'searchQuery', 'activeCategory', 'pageTitle', 'pageDescription'));
     }
+    
     abort(404);
 });

@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chủ đề: {{ $tag->name }} - Tải hiệu ứng âm thanh chất lượng cao | AMMP3.com</title>
+    <title>Tải hiệu ứng âm thanh {{ $tag->name }} Mp3 miễn phí - AMMP3.com</title>
     
     <!-- SEO Meta Tags -->
-    <meta name="description" content="Danh sách các hiệu ứng âm thanh, tiếng động chủ đề {{ $tag->name }} chất lượng cao. Tải file MP3 {{ $tag->name }} miễn phí không bản quyền cực nhanh.">
+    <meta name="description" content="Tải hiệu ứng âm thanh chủ đề {{ $tag->name }} Mp3 miễn phí chất lượng cao. Tải file MP3 {{ $tag->name }} không bản quyền cho dựng phim, edit video CapCut, TikTok, YouTube.">
     <meta name="keywords" content="{{ $tag->name }}, ammp3, meme soundboard, hiệu ứng âm thanh, tiếng động">
     <meta name="author" content="AMMP3.com">
     <link rel="canonical" href="{{ url('/tag/' . $tag->slug) }}">
@@ -14,8 +14,8 @@
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ url('/tag/' . $tag->slug) }}">
-    <meta property="og:title" content="Chủ đề: {{ $tag->name }} - AMMP3.com">
-    <meta property="og:description" content="Danh sách các hiệu ứng âm thanh, tiếng động chủ đề {{ $tag->name }} chất lượng cao miễn phí!">
+    <meta property="og:title" content="Tải hiệu ứng âm thanh {{ $tag->name }} Mp3 miễn phí - AMMP3.com">
+    <meta property="og:description" content="Danh sách các hiệu ứng âm thanh, tiếng động chủ đề {{ $tag->name }} chất lượng cao tải về miễn phí!">
     <meta property="og:image" content="{{ asset('favicon.png') }}">
     
     <!-- Favicon -->
@@ -180,6 +180,97 @@
             color: var(--text-muted);
             max-width: 700px;
             margin: 0 auto;
+        }
+
+        .category-pill {
+            background-color: #1f2937;
+            color: #ffffff;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            user-select: none;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .category-pill:hover {
+            background-color: #374151;
+            color: #ffffff;
+        }
+
+        .category-pill.active {
+            background-color: #3b82f6;
+            border-color: #60a5fa;
+            color: #ffffff;
+        }
+
+        /* Navigation section on homepage & tags */
+        .home-nav-section {
+            margin-bottom: 30px;
+            background-color: #101726;
+            border: 1px solid #1f2937;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .home-nav-group {
+            margin-bottom: 18px;
+        }
+
+        .home-nav-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .home-nav-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .home-nav-title svg {
+            width: 16px;
+            height: 16px;
+            fill: #ef4444;
+        }
+
+        .pills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .topic-pill {
+            background-color: #1f2937;
+            color: #9ca3af;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 12.5px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            display: inline-block;
+        }
+
+        .topic-pill:hover {
+            background-color: #273549;
+            color: #ffffff;
+            border-color: #ef4444;
+        }
+
+        .topic-pill.active {
+            background-color: #ef4444;
+            color: #ffffff;
+            border-color: #fca5a5;
         }
 
         /* Sound grid */
@@ -373,17 +464,21 @@
             border: none;
             color: var(--text-muted);
             cursor: pointer;
-            padding: 4px;
-            border-radius: 4px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            width: 38px;
+            height: 38px;
             transition: all 0.2s;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .action-btn:hover {
-            color: #ffffff;
-            background-color: #1f2937;
+        @media (hover: hover) {
+            .action-btn:hover {
+                color: #ffffff;
+            }
         }
 
         .action-btn.active-fav {
@@ -391,8 +486,8 @@
         }
 
         .action-btn svg {
-            width: 16px;
-            height: 16px;
+            width: 22px;
+            height: 22px;
             fill: currentColor;
         }
 
@@ -626,6 +721,8 @@
             <p class="hero-desc">Danh sách các hiệu ứng âm thanh, tiếng động liên quan đến chủ đề "{{ $tag->name }}" chất lượng cao miễn phí.</p>
         </section>
 
+
+
         <!-- Sounds Buttons Grid -->
         <section class="sounds-grid" id="soundsGrid">
             @php
@@ -649,7 +746,7 @@
                         </button>
                     </div>
                     
-                    <a href="{{ url('/instant/' . $sound->slug . '-' . $sound->id) }}" class="sound-title" title="{{ $sound->title }}" id="title-link-{{ $sound->id }}">
+                    <a href="{{ url('/' . $sound->slug . '-' . $sound->id) }}" class="sound-title" title="{{ $sound->title }}" id="title-link-{{ $sound->id }}">
                         {{ $sound->title }}
                     </a>
                     
@@ -670,7 +767,7 @@
                             class="action-btn" 
                             title="Copy link liên kết" 
                             aria-label="Copy link {{ $sound->title }}"
-                            onclick="copyLink('{{ url('/instant/' . $sound->slug . '-' . $sound->id) }}')">
+                            onclick="copyLink('{{ url('/' . $sound->slug . '-' . $sound->id) }}')">
                             <svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
                         </button>
 
@@ -713,6 +810,38 @@
                     <span class="pagination-btn disabled">Sau</span>
                 @endif
             </nav>
+        @endif
+
+        <!-- Categories Section -->
+        @if(isset($globalCategories) && count($globalCategories) > 0)
+        <div class="suggested-topics-section">
+            <h2 class="related-title">
+                Thể loại
+            </h2>
+            <div class="topics-grid">
+                @foreach ($globalCategories as $cat)
+                    <a href="{{ url('/' . $cat->slug) }}" class="topic-pill">
+                        {{ $cat->name }}
+                    </a>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        <!-- Suggested Topics Section -->
+        @if(isset($globalTags) && count($globalTags) > 0)
+        <div class="suggested-topics-section" style="padding-top: 0; padding-bottom: 30px;">
+            <h2 class="related-title">
+                Chủ đề phổ biến
+            </h2>
+            <div class="topics-grid">
+                @foreach ($globalTags as $t)
+                    <a href="{{ url('/tag/' . $t->slug) }}" class="topic-pill {{ ($tag->slug == $t->slug) ? 'active' : '' }}">
+                        # {{ $t->name }}
+                    </a>
+                @endforeach
+            </div>
+        </div>
         @endif
 
     </main>

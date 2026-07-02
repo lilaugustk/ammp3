@@ -4,22 +4,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $sound->title }} - Tải âm thanh MP3 chất lượng cao | AMMP3.com</title>
+    <title>Tải {{ $sound->title }} Mp3 miễn phí - Download hiệu ứng âm thanh | AMMP3.com</title>
 
     <!-- SEO Meta Tags -->
     <meta name="description"
-        content="Tải hiệu ứng âm thanh '{{ $sound->title }}' chất lượng cao miễn phí, tải file MP3 {{ $sound->title }}, hiệu ứng âm thanh {{ $sound->title }} không bản quyền phục vụ dựng phim, video CapCut, TikTok.">
+        content="Tải {{ $sound->title }} chất lượng cao, download file mp3 {{ $sound->title }} miễn phí. Hiệu ứng âm thanh {{ $sound->title }} không bản quyền cực hay phục vụ dựng phim, edit video CapCut, TikTok, YouTube.">
     <meta name="keywords"
         content="{{ $sound->title }} mp3, tải {{ $sound->title }}, {{ $sound->title }} không bản quyền, ammp3, meme soundboard, hiệu ứng âm thanh, tiếng động">
     <meta name="author" content="AMMP3.com">
-    <link rel="canonical" href="{{ url('/instant/' . $sound->slug . '-' . $sound->id) }}">
+    <link rel="canonical" href="{{ url('/' . $sound->slug . '-' . $sound->id) }}">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="music.song">
-    <meta property="og:url" content="{{ url('/instant/' . $sound->slug . '-' . $sound->id) }}">
-    <meta property="og:title" content="{{ $sound->title }} - Tải âm thanh MP3 chất lượng cao | AMMP3.com">
+    <meta property="og:url" content="{{ url('/' . $sound->slug . '-' . $sound->id) }}">
+    <meta property="og:title" content="Tải {{ $sound->title }} Mp3 miễn phí - AMMP3.com">
     <meta property="og:description"
-        content="Nghe và tải xuống hiệu ứng âm thanh '{{ $sound->title }}' chất lượng cao miễn phí không bản quyền trên AMMP3.com!">
+        content="Nghe và tải xuống hiệu ứng âm thanh '{{ $sound->title }}' chất lượng cao hoàn toàn miễn phí không bản quyền trên AMMP3.com!">
     <meta property="og:image" content="{{ asset('favicon.png') }}">
 
     <!-- JSON-LD Structured Data / Schema Markup -->
@@ -29,7 +29,7 @@
       "@@graph": [
         {
           "@@type": "BreadcrumbList",
-          "@@id": "{{ url('/instant/' . $sound->slug . '-' . $sound->id) }}#breadcrumb",
+          "@@id": "{{ url('/' . $sound->slug . '-' . $sound->id) }}#breadcrumb",
           "itemListElement": [
             {
               "@@type": "ListItem",
@@ -49,13 +49,13 @@
               "@@type": "ListItem",
               "position": 3,
               "name": "{{ $sound->title }}",
-              "item": "{{ url('/instant/' . $sound->slug . '-' . $sound->id) }}"
+              "item": "{{ url('/' . $sound->slug . '-' . $sound->id) }}"
             }
           ]
         },
         {
           "@@type": "AudioObject",
-          "@@id": "{{ url('/instant/' . $sound->slug . '-' . $sound->id) }}#audio",
+          "@@id": "{{ url('/' . $sound->slug . '-' . $sound->id) }}#audio",
           "name": "{{ $sound->title }}",
           "description": "{{ $sound->description ?? 'Tải hiệu ứng âm thanh ' . $sound->title . ' chất lượng cao miễn phí không bản quyền' }}",
           "contentUrl": "{{ $sound->local_path ? asset($sound->local_path) : $sound->mp3_url }}",
@@ -180,7 +180,7 @@
         .container {
             max-width: 800px;
             margin: 0 auto;
-            padding: 40px 15px;
+            padding: 20px 10px;
         }
 
         /* Detail Panel Card */
@@ -188,7 +188,7 @@
             background-color: transparent;
             border: none;
             border-radius: 0;
-            padding: 40px 20px;
+            padding: 0 10px;
             text-align: center;
             display: flex;
             flex-direction: column;
@@ -393,11 +393,19 @@
             gap: 8px;
             text-decoration: none;
             transition: all 0.2s;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .large-action-btn:hover {
-            background-color: #374151;
-            border-color: #4b5563;
+        @media (hover: hover) {
+            .large-action-btn:hover {
+                background-color: #374151;
+                border-color: #4b5563;
+            }
+        }
+
+        .large-action-btn:active {
+            background-color: #111827;
         }
 
         .large-action-btn.active-fav {
@@ -485,7 +493,7 @@
             border-radius: 3px;
             background: #1f2937;
             outline: none;
-            cursor: pointer;
+            pointer-events: none;
             -webkit-appearance: none;
             appearance: none;
             transition: background 0.1s;
@@ -494,7 +502,7 @@
         .player-progress::-webkit-slider-runnable-track {
             width: 100%;
             height: 6px;
-            cursor: pointer;
+            cursor: default;
         }
 
         .player-progress::-webkit-slider-thumb {
@@ -502,16 +510,11 @@
             width: 14px;
             border-radius: 50%;
             background: #ef4444;
-            cursor: pointer;
+            cursor: default;
             -webkit-appearance: none;
             margin-top: -4px;
             box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
             transition: transform 0.1s;
-        }
-
-        .player-progress::-webkit-slider-thumb:hover {
-            transform: scale(1.2);
-            background: #f87171;
         }
 
         .volume-container {
@@ -698,6 +701,289 @@
             color: var(--text-muted);
             font-size: 12px;
         }
+
+        /* Mobile Optimization */
+        @media (max-width: 640px) {
+            .navbar {
+                padding: 12px 15px;
+                gap: 10px;
+            }
+            .brand-logo {
+                font-size: 20px;
+            }
+            .search-container {
+                order: 3;
+                width: 100%;
+                max-width: 100%;
+                margin-top: 4px;
+            }
+            .search-input {
+                font-size: 13px;
+                padding: 7px 15px;
+            }
+            .nav-links {
+                gap: 10px;
+            }
+            .nav-link, .dropdown-btn {
+                font-size: 13px;
+            }
+            .container {
+                padding: 15px 10px;
+            }
+            .detail-panel {
+                padding: 0 5px;
+            }
+            .sound-title {
+                font-size: 20px;
+                line-height: 1.4;
+                margin-bottom: 6px;
+            }
+            .sound-category {
+                margin-bottom: 20px;
+            }
+            .instant-btn-wrapper-large {
+                margin-bottom: 20px;
+            }
+            .audio-player-row {
+                gap: 8px;
+                margin-bottom: 20px;
+                padding: 0 5px;
+            }
+            .player-time {
+                font-size: 11px;
+                min-width: 32px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .volume-slider {
+                display: none;
+            }
+            .volume-container {
+                gap: 0;
+            }
+            .detail-actions {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+                width: 100%;
+                max-width: 450px;
+                margin-top: 15px;
+            }
+            .large-action-btn {
+                padding: 10px 4px;
+                font-size: 12px;
+                flex-direction: column;
+                gap: 6px;
+                justify-content: center;
+                align-items: center;
+                text-align: center;
+                border-radius: 8px;
+                min-height: 64px;
+            }
+            .large-action-btn svg {
+                width: 18px;
+                height: 18px;
+            }
+        }
+        /* Related Sounds & Suggested Topics Section styles */
+        .related-sounds-section,
+        .suggested-topics-section {
+            width: 100%;
+            padding-top: 40px;
+        }
+
+        .related-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 20px;
+            text-align: left;
+            border-left: 4px solid #ef4444;
+            padding-left: 10px;
+        }
+
+        .related-sounds-list {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .related-sound-item {
+            display: flex;
+            align-items: center;
+            background-color: transparent;
+            border: none;
+            padding: 10px 0;
+            gap: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .related-sound-item:last-child {
+            border-bottom: none;
+        }
+
+        .related-sound-item .play-col {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .related-sound-item .list-play-btn {
+            background-color: #1f2937;
+            color: #ffffff;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .related-sound-item .list-play-btn:hover {
+            background-color: #3b82f6;
+            transform: scale(1.05);
+        }
+
+        .related-sound-item .list-play-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .related-sound-item .list-play-btn .play-svg {
+            margin-left: 2px;
+        }
+
+        .related-sound-item .info-col {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .related-sound-item .sound-title-link {
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 600;
+            text-decoration: none;
+            text-align: left;
+            margin-bottom: 0;
+            padding: 0;
+            height: auto;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .related-sound-item .sound-title-link:hover {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+
+        .related-sound-item .actions-col {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Mobile adaptation */
+        @media (max-width: 640px) {
+            .related-sound-item {
+                padding: 8px 0;
+                gap: 10px;
+            }
+            .related-sound-item .sound-title-link {
+                font-size: 13.5px;
+            }
+            .related-sound-item .action-btn {
+                width: 32px;
+                height: 32px;
+            }
+            .related-sound-item .action-btn svg {
+                width: 18px;
+                height: 18px;
+            }
+        }
+        .actions-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            transition: all 0.2s;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        @media (hover: hover) {
+            .action-btn:hover {
+                color: #ffffff;
+            }
+        }
+
+        .action-btn.active-fav {
+            color: #ef4444 !important;
+        }
+
+        .action-btn svg {
+            width: 22px;
+            height: 22px;
+            fill: currentColor;
+        }
+
+        .topic-pill {
+            display: inline-block;
+            color: #ffffff;
+            padding: 8px 16px;
+            font-size: 13.5px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .topics-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: flex-start;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .topics-grid {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                padding-bottom: 12px;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+                -webkit-overflow-scrolling: touch;
+            }
+            .topics-grid::-webkit-scrollbar {
+                display: none;
+            }
+            .topic-pill {
+                white-space: nowrap;
+                font-size: 12.5px;
+                padding: 6px 12px;
+            }
+        }
     </style>
 </head>
 
@@ -829,30 +1115,149 @@
                 </a>
             </div>
 
-            <!-- Tags Section -->
-            @if(isset($sound->tags) && $sound->tags->count() > 0)
-                <p class="tags-container" style="margin-top: 25px; font-size: 14px; color: var(--text-muted);">
-                    <span style="font-weight: 600; color: #ffffff; margin-right: 5px;">Chủ đề:</span>
-                    @foreach($sound->tags as $tag)
-                        <a href="{{ url('/tag/' . $tag->slug) }}" style="color: #3b82f6; text-decoration: none; margin-right: 12px; font-weight: 600; display: inline-block;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
-                            {{ $tag->name }}
-                        </a>
-                    @endforeach
-                </p>
-            @endif
+            <!-- File Information Table -->
+            <div class="file-info-box" style="margin-top: 30px; text-align: left; max-width: 500px; width: 100%; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13.5px; color: var(--text-muted); margin-bottom: 20px;">
+                    <tbody>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 8px 0; font-weight: 600; color: #ffffff; width: 120px;">Bản quyền:</td>
+                            <td style="padding: 8px 0;">Miễn phí (Free)</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 8px 0; font-weight: 600; color: #ffffff;">Thể loại:</td>
+                            <td style="padding: 8px 0;">
+                                <a href="{{ url('/?category=' . ($sound->category->slug ?? '')) }}" style="color: #3b82f6; text-decoration: none; font-weight: 600;">
+                                    {{ $sound->category->name ?? 'Meme' }}
+                                </a>
+                            </td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 8px 0; font-weight: 600; color: #ffffff;">Định dạng:</td>
+                            <td style="padding: 8px 0;">.mp3</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 8px 0; font-weight: 600; color: #ffffff;">Chất lượng:</td>
+                            <td style="padding: 8px 0;">320 kbps (HQ)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: 600; color: #ffffff;">Cung cấp bởi:</td>
+                            <td style="padding: 8px 0; font-weight: 600; color: #ef4444;">AMMP3.com</td>
+                        </tr>
+                    </tbody>
+                </table>
 
-            <!-- Description Section -->
-            @if($sound->description)
-                <div class="sound-description" style="margin-top: 30px; text-align: left; max-width: 500px; width: 100%;">
-                    <h3 style="font-size: 15px; font-weight: 700; color: #ffffff; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                        <svg style="width: 16px; height: 16px; fill: #3b82f6;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-                        Mô tả chi tiết:
-                    </h3>
-                    <p style="font-size: 13.5px; color: var(--text-muted); line-height: 1.6; margin: 0;">{{ $sound->description }}</p>
-                </div>
-            @endif
+                <h3 style="font-size: 15px; font-weight: 700; color: #ffffff; margin-bottom: 10px;">
+                    Mô tả chi tiết:
+                </h3>
+                <p style="font-size: 13.5px; color: var(--text-muted); line-height: 1.6; margin: 0;">
+                    <strong>{{ $sound->title }}</strong> là hiệu ứng âm thanh chất lượng cao thuộc danh mục 
+                    <a href="{{ url('/?category=' . ($sound->category->slug ?? '')) }}" style="color: #3b82f6; text-decoration: none; font-weight: 600;">{{ $sound->category->name ?? 'Meme' }}</a>.
+                    @if($sound->description)
+                        {{ $sound->description }}
+                    @else
+                        Đây là đoạn âm thanh cực hay phù hợp dùng làm hiệu ứng tiếng động chèn vào các video hài hước, làm clip chế meme troll, dựng phim ngắn chuyên nghiệp, hoặc edit video ngắn trên các nền tảng mạng xã hội phổ biến như TikTok, YouTube Shorts, CapCut, Facebook Reels.
+                    @endif
+                </p>
+
+                @if(isset($sound->tags) && $sound->tags->count() > 0)
+                    <p style="margin-top: 15px; font-size: 13.5px; color: var(--text-muted); line-height: 1.6;">
+                        <span style="font-weight: 600; color: #ffffff; margin-right: 5px;">Chủ đề liên quan:</span>
+                        @foreach($sound->tags as $tag)
+                            <a href="{{ url('/tag/' . $tag->slug) }}" style="color: #3b82f6; text-decoration: none; margin-right: 8px; font-weight: 600; display: inline-block;">
+                                #{{ $tag->name }}
+                            </a>
+                        @endforeach
+                    </p>
+                @endif
+            </div>
 
             <a href="{{ url('/') }}" class="back-link">Quay lại danh sách chính</a>
+        </div>
+
+        <!-- Related Sounds Section -->
+        @if(isset($relatedSounds) && $relatedSounds->count() > 0)
+        <div class="related-sounds-section">
+            <h2 class="related-title">
+                Âm thanh cùng chủ đề
+            </h2>
+            <div class="related-sounds-list">
+                @php
+                    $colors = ['red', 'green', 'blue', 'orange', 'purple', 'cyan', 'pink', 'yellow', 'indigo', 'teal'];
+                @endphp
+                @foreach($relatedSounds as $relSound)
+                    @php
+                        $color = $colors[($relSound->id) % count($colors)];
+                        $relAudioUrl = $relSound->local_path ? asset($relSound->local_path) : $relSound->mp3_url;
+                    @endphp
+                    <div class="related-sound-item" id="card-{{ $relSound->id }}">
+                        <div class="play-col">
+                            <button 
+                                id="play-btn-{{ $relSound->id }}"
+                                class="list-play-btn" 
+                                data-audio="{{ $relAudioUrl }}"
+                                title="Phát {{ $relSound->title }}"
+                                aria-label="Play {{ $relSound->title }}"
+                                onclick="playRelatedAudio(this, '{{ $relSound->id }}')">
+                                <!-- Triangle Play Icon -->
+                                <svg class="play-svg" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M8 5v14l11-7z" />
+                                </svg>
+                                <!-- Pause Icon -->
+                                <svg class="pause-svg" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
+                                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div class="info-col">
+                            <a href="{{ url('/' . $relSound->slug . '-' . $relSound->id) }}" class="sound-title-link" title="{{ $relSound->title }}" id="title-link-{{ $relSound->id }}">
+                                {{ $relSound->title }}
+                            </a>
+                        </div>
+
+                        <div class="actions-col">
+                            <!-- Favorite Button -->
+                            <button 
+                                id="fav-btn-{{ $relSound->id }}"
+                                class="action-btn" 
+                                title="Thêm vào yêu thích" 
+                                aria-label="Favorite {{ $relSound->title }}"
+                                onclick="toggleRelatedFavorite('{{ $relSound->id }}')">
+                                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        <!-- Suggested Topics Section -->
+        @if(isset($globalCategories) && count($globalCategories) > 0)
+        <div class="suggested-topics-section">
+            <h2 class="related-title">
+                Chủ đề đề xuất
+            </h2>
+            <div class="topics-grid">
+                @foreach ($globalCategories as $cat)
+                    <a href="{{ url('/' . $cat->slug) }}" class="topic-pill">
+                        # {{ $cat->name }}
+                    </a>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        <!-- Bottom Search Bar Section -->
+        <div class="bottom-search-section" style="width: 100%; max-width: 600px; margin: 40px auto 10px auto; box-sizing: border-box;">
+            <form action="{{ url('/') }}" method="GET" style="position: relative; width: 100%; display: flex; align-items: center;">
+                <input type="text" name="s" placeholder="Tìm kiếm âm thanh, tiếng động..." style="width: 100%; padding: 14px 50px 14px 20px; border-radius: 12px; border: 1px solid #334155; background-color: #1e293b; color: #ffffff; font-size: 15px; outline: none; transition: all 0.2s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.2);" onfocus="this.style.borderColor='#ef4444'; this.style.boxShadow='0 0 0 2px rgba(239, 68, 68, 0.2)'" onblur="this.style.borderColor='#334155'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.2)'">
+                <button type="submit" style="background: none; border: none; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;">
+                    <svg style="width: 20px; height: 20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </button>
+            </form>
         </div>
 
     </main>
@@ -881,6 +1286,10 @@
         const audioUrl = "{{ $audioUrl }}";
         const favoritedIds = JSON.parse(localStorage.getItem('fav_sounds') || '[]');
 
+        // Related sounds audio cache
+        const relatedAudioElements = {};
+        let currentlyPlayingRelatedId = null;
+
         // Native HTML5 Audio Element - supports streaming and instant playback
         const audio = new Audio(audioUrl);
         audio.preload = 'auto'; // Load automatically on detail page load
@@ -907,59 +1316,65 @@
             return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
         }
 
-        // Initialize when page loads
+        function updateDuration() {
+            if (audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) {
+                durationEl.textContent = formatTime(audio.duration);
+                progressSlider.max = audio.duration;
+            }
+        }        // Initialize when page loads
         document.addEventListener('DOMContentLoaded', () => {
             initFavoriteUI();
             setupDropdown();
             
             // Listen to metadata loaded
-            audio.addEventListener('loadedmetadata', () => {
-                durationEl.textContent = formatTime(audio.duration);
-                progressSlider.max = audio.duration;
-            });
+            audio.addEventListener('loadedmetadata', updateDuration);
+            audio.addEventListener('durationchange', updateDuration);
+            audio.addEventListener('canplay', updateDuration);
+            
+            // In case it's already loaded
+            if (audio.readyState >= 1 || (audio.duration && !isNaN(audio.duration))) {
+                updateDuration();
+            }
 
             // Listen to time updates
             audio.addEventListener('timeupdate', () => {
-                if (!isDragging) {
-                    progressSlider.value = audio.currentTime;
-                    currentTimeEl.textContent = formatTime(audio.currentTime);
-                }
+                progressSlider.value = audio.currentTime;
+                currentTimeEl.textContent = formatTime(audio.currentTime);
             });
 
             // Audio ended
             audio.addEventListener('ended', () => {
                 resetPlayerState();
             });
-
-            // Progress Slider interactions
-            progressSlider.addEventListener('mousedown', () => isDragging = true);
-            progressSlider.addEventListener('touchstart', () => isDragging = true);
-
-            progressSlider.addEventListener('mouseup', () => {
-                isDragging = false;
-                audio.currentTime = parseFloat(progressSlider.value);
-            });
-            progressSlider.addEventListener('touchend', () => {
-                isDragging = false;
-                audio.currentTime = parseFloat(progressSlider.value);
-            });
-
-            progressSlider.addEventListener('input', () => {
-                currentTimeEl.textContent = formatTime(parseFloat(progressSlider.value));
-            });
         });
-
         function playAudio(btn) {
             togglePlay();
         }
 
         function togglePlay() {
+            // Stop related sounds if any are playing
+            Object.keys(relatedAudioElements).forEach(key => {
+                const otherAudio = relatedAudioElements[key];
+                otherAudio.pause();
+                otherAudio.currentTime = 0;
+                const otherBtn = document.getElementById(`play-btn-${key}`);
+                if (otherBtn) {
+                    otherBtn.classList.remove('playing');
+                    const oPlayIcon = otherBtn.querySelector('.play-svg');
+                    const oPauseIcon = otherBtn.querySelector('.pause-svg');
+                    if (oPlayIcon) oPlayIcon.style.display = 'block';
+                    if (oPauseIcon) oPauseIcon.style.display = 'none';
+                }
+            });
+            currentlyPlayingRelatedId = null;
+
             if (audio.paused) {
                 // Play
                 audio.play().catch(e => console.error("Playback failed:", e));
                 playBtn.classList.add('playing');
                 playIcon.style.display = 'none';
                 pauseIcon.style.display = 'block';
+                updateDuration();
             } else {
                 // Pause
                 audio.pause();
@@ -1025,10 +1440,18 @@
         function initFavoriteUI() {
             const favBtn = document.getElementById('fav-btn');
             const favText = document.getElementById('fav-text');
-            if (favoritedIds.includes(soundId)) {
+            if (favBtn && (favoritedIds.includes(soundId.toString()) || favoritedIds.includes(soundId))) {
                 favBtn.classList.add('active-fav');
-                favText.textContent = 'Đã Yêu thích';
+                if (favText) favText.textContent = 'Đã Yêu thích';
             }
+
+            // Sync related sounds favorite icons
+            favoritedIds.forEach(id => {
+                const btn = document.getElementById(`fav-btn-${id}`);
+                if (btn) {
+                    btn.classList.add('active-fav');
+                }
+            });
         }
 
         // Dropdown setup
@@ -1051,23 +1474,148 @@
 
         // Toggle Favorite
         function toggleFavorite() {
-            const index = favoritedIds.indexOf(soundId);
+            const index = favoritedIds.indexOf(soundId.toString());
+            const indexStr = favoritedIds.indexOf(soundId);
+            const finalIndex = index !== -1 ? index : indexStr;
             const favBtn = document.getElementById('fav-btn');
             const favText = document.getElementById('fav-text');
+            const relatedFavBtn = document.getElementById(`fav-btn-${soundId}`);
 
-            if (index === -1) {
-                favoritedIds.push(soundId);
-                favBtn.classList.add('active-fav');
-                favText.textContent = 'Đã Yêu thích';
+            if (finalIndex === -1) {
+                favoritedIds.push(soundId.toString());
+                if (favBtn) favBtn.classList.add('active-fav');
+                if (favText) favText.textContent = 'Đã Yêu thích';
+                if (relatedFavBtn) relatedFavBtn.classList.add('active-fav');
                 showToast("Đã lưu vào danh sách yêu thích!");
             } else {
-                favoritedIds.splice(index, 1);
-                favBtn.classList.remove('active-fav');
-                favText.textContent = 'Yêu thích';
+                favoritedIds.splice(finalIndex, 1);
+                if (favBtn) favBtn.classList.remove('active-fav');
+                if (favText) favText.textContent = 'Yêu thích';
+                if (relatedFavBtn) relatedFavBtn.classList.remove('active-fav');
                 showToast("Đã xóa khỏi danh sách yêu thích!");
             }
 
             localStorage.setItem('fav_sounds', JSON.stringify(favoritedIds));
+        }
+
+        // Toggle Favorite for Related Sounds
+        function toggleRelatedFavorite(id) {
+            const index = favoritedIds.indexOf(id.toString());
+            const indexStr = favoritedIds.indexOf(id);
+            const finalIndex = index !== -1 ? index : indexStr;
+            const favBtn = document.getElementById(`fav-btn-${id}`);
+
+            if (finalIndex === -1) {
+                favoritedIds.push(id.toString());
+                if (favBtn) favBtn.classList.add('active-fav');
+                showToast("Đã lưu vào danh sách yêu thích!");
+            } else {
+                favoritedIds.splice(finalIndex, 1);
+                if (favBtn) favBtn.classList.remove('active-fav');
+                showToast("Đã xóa khỏi danh sách yêu thích!");
+            }
+
+            localStorage.setItem('fav_sounds', JSON.stringify(favoritedIds));
+
+            // If the related sound is the same as the main page sound, sync main UI
+            if (id.toString() === soundId.toString()) {
+                const mainFavBtn = document.getElementById('fav-btn');
+                const mainFavText = document.getElementById('fav-text');
+                if (mainFavBtn) {
+                    if (finalIndex === -1) {
+                        mainFavBtn.classList.add('active-fav');
+                        if (mainFavText) mainFavText.textContent = 'Đã Yêu thích';
+                    } else {
+                        mainFavBtn.classList.remove('active-fav');
+                        if (mainFavText) mainFavText.textContent = 'Yêu thích';
+                    }
+                }
+            }
+        }
+
+        // Copy Link for Related Sounds
+        function copyRelatedLink(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                showToast("Đã sao chép liên kết chi tiết!");
+            }).catch(() => {
+                showToast("Không thể sao chép liên kết.");
+            });
+        }
+
+        // Play related audio functions
+        function getRelatedAudio(id, url) {
+            if (!relatedAudioElements[id]) {
+                const a = new Audio(url);
+                a.preload = 'none';
+                relatedAudioElements[id] = a;
+                a.addEventListener('ended', () => {
+                    const btn = document.getElementById(`play-btn-${id}`);
+                    if (btn) {
+                        btn.classList.remove('playing');
+                        const playIcon = btn.querySelector('.play-svg');
+                        const pauseIcon = btn.querySelector('.pause-svg');
+                        if (playIcon) playIcon.style.display = 'block';
+                        if (pauseIcon) pauseIcon.style.display = 'none';
+                    }
+                    if (currentlyPlayingRelatedId === id) {
+                        currentlyPlayingRelatedId = null;
+                    }
+                });
+            }
+            return relatedAudioElements[id];
+        }
+
+        function playRelatedAudio(btn, id) {
+            const relAudioUrl = btn.getAttribute('data-audio');
+            const relAudio = getRelatedAudio(id, relAudioUrl);
+
+            // 1. Stop main audio playing
+            if (!audio.paused) {
+                audio.pause();
+                resetPlayerState();
+            }
+
+            // 2. Stop other related audios
+            Object.keys(relatedAudioElements).forEach(key => {
+                if (key !== id) {
+                    const otherAudio = relatedAudioElements[key];
+                    otherAudio.pause();
+                    otherAudio.currentTime = 0;
+                    const otherBtn = document.getElementById(`play-btn-${key}`);
+                    if (otherBtn) {
+                        otherBtn.classList.remove('playing');
+                        const oPlayIcon = otherBtn.querySelector('.play-svg');
+                        const oPauseIcon = otherBtn.querySelector('.pause-svg');
+                        if (oPlayIcon) oPlayIcon.style.display = 'block';
+                        if (oPauseIcon) oPauseIcon.style.display = 'none';
+                    }
+                }
+            });
+
+            // 3. Toggle this one
+            const playIcon = btn.querySelector('.play-svg');
+            const pauseIcon = btn.querySelector('.pause-svg');
+
+            if (currentlyPlayingRelatedId === id && !relAudio.paused) {
+                relAudio.pause();
+                relAudio.currentTime = 0;
+                btn.classList.remove('playing');
+                if (playIcon) playIcon.style.display = 'block';
+                if (pauseIcon) pauseIcon.style.display = 'none';
+                currentlyPlayingRelatedId = null;
+            } else {
+                btn.classList.add('playing');
+                if (playIcon) playIcon.style.display = 'none';
+                if (pauseIcon) pauseIcon.style.display = 'block';
+                currentlyPlayingRelatedId = id;
+                relAudio.play().catch(e => {
+                    console.error("Playback failed:", e);
+                    btn.classList.remove('playing');
+                    if (playIcon) playIcon.style.display = 'block';
+                    if (pauseIcon) pauseIcon.style.display = 'none';
+                    currentlyPlayingRelatedId = null;
+                });
+            }
         }
     </script>
 </body>
