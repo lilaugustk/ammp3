@@ -408,6 +408,48 @@
             fill: currentColor;
         }
 
+        /* Pagination */
+        .pagination-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 40px;
+            padding: 10px 0;
+            grid-column: 1 / -1;
+        }
+
+        .pagination-btn {
+            background-color: #1f2937;
+            border: 1px solid var(--border-color);
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .pagination-btn:hover:not(.disabled) {
+            background-color: #374151;
+            border-color: #4b5563;
+        }
+
+        .pagination-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
         /* Toast notifications */
         .toast {
             position: fixed;
@@ -569,12 +611,17 @@
                 AMMP3 <span>.com</span>
             </a>
             
-            <div class="search-container">
-                <input type="text" id="searchInput" class="search-input" placeholder="Tìm kiếm âm thanh..." value="{{ $searchQuery }}">
-                <svg class="search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-            </div>
+            <form action="{{ url('/') }}" method="GET" class="search-container" id="searchForm">
+                <input type="text" name="s" id="searchInput" class="search-input" placeholder="Tìm kiếm âm thanh..." value="{{ $searchQuery }}">
+                @if(request('category'))
+                    <input type="hidden" name="category" value="{{ request('category') }}">
+                @endif
+                <button type="submit" style="background:none; border:none; position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                    <svg class="search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="position:static; transform:none; width:16px; height:16px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </button>
+            </form>
             
             <nav class="nav-links">
                 <a href="{{ url('/') }}" class="nav-link">Trang chủ</a>
@@ -585,9 +632,9 @@
                         <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
                     </button>
                     <div class="dropdown-content" aria-labelledby="categoryDropdownBtn">
-                        <a class="category-menu-item active" data-category="all" href="{{ url('/') }}">Tất cả</a>
+                        <a class="category-menu-item {{ !request('category') || request('category') == 'all' ? 'active' : '' }}" data-category="all" href="{{ url('/') }}">Tất cả</a>
                         @foreach($globalCategories as $category)
-                            <a class="category-menu-item" data-category="{{ $category->slug }}" href="{{ url('/?category=' . $category->slug) }}">
+                            <a class="category-menu-item {{ request('category') == $category->slug ? 'active' : '' }}" data-category="{{ $category->slug }}" href="{{ url('/?category=' . $category->slug) }}">
                                 {{ $category->name }}
                             </a>
                         @endforeach
@@ -679,6 +726,27 @@
             </div>
         </section>
 
+        @if ($sounds->hasPages())
+            <nav class="pagination-container" aria-label="Phân trang">
+                @if ($sounds->onFirstPage())
+                    <span class="pagination-btn disabled">Trước</span>
+                @else
+                    <a href="{{ $sounds->previousPageUrl() }}" class="pagination-btn">Trước</a>
+                @endif
+
+                <span class="pagination-info">
+                    {{-- Trang {{ $sounds->currentPage() }} / {{ $sounds->lastPage() }} --}}
+                    Trang {{ $sounds->currentPage() }}
+                </span>
+
+                @if ($sounds->hasMorePages())
+                    <a href="{{ $sounds->nextPageUrl() }}" class="pagination-btn">Sau</a>
+                @else
+                    <span class="pagination-btn disabled">Sau</span>
+                @endif
+            </nav>
+        @endif
+
     </main>
 
     <!-- Footer -->
@@ -748,12 +816,6 @@
                     item.classList.add('active');
                     activeCategory = initialCat;
                 }
-            }
-
-            // Lọc tìm kiếm nếu có sẵn từ query string
-            const initialSearch = document.getElementById('searchInput').value;
-            if (initialSearch || initialCat) {
-                filterSounds();
             }
         });
 
@@ -881,27 +943,18 @@
             return str.toLowerCase().trim();
         }
 
-        // Lọc hiển thị soundboard
+        // Lọc hiển thị soundboard (chỉ dùng cho Yêu thích vì lưu trữ ở localStorage client)
         function filterSounds() {
-            const query = removeVietnameseTones(document.getElementById('searchInput').value);
             const cards = document.querySelectorAll('.sound-card');
             let visibleCount = 0;
 
             cards.forEach(card => {
-                const category = card.getAttribute('data-category');
-                const searchTerm = card.getAttribute('data-search-term');
                 const id = card.id.replace('card-', '');
-
-                // Kiểm tra danh mục
-                const categoryMatches = (activeCategory === 'all' || category === activeCategory);
-                
-                // Kiểm tra tìm kiếm
-                const searchMatches = (!query || searchTerm.includes(query));
                 
                 // Kiểm tra yêu thích
                 const favoriteMatches = (!showOnlyFavs || favoritedIds.includes(id));
 
-                if (categoryMatches && searchMatches && favoriteMatches) {
+                if (favoriteMatches) {
                     card.style.display = 'flex';
                     visibleCount++;
                 } else {
@@ -920,10 +973,12 @@
 
         // Đăng ký Tìm kiếm
         function setupSearch() {
-            const searchInput = document.getElementById('searchInput');
-            searchInput.addEventListener('input', () => {
-                filterSounds();
-            });
+            const searchForm = document.getElementById('searchForm');
+            if (searchForm) {
+                searchForm.addEventListener('submit', (e) => {
+                    // Để form submit tự nhiên lên server
+                });
+            }
         }
 
         // Đăng ký Lọc danh mục
@@ -932,19 +987,15 @@
             menuItems.forEach(item => {
                 item.addEventListener('click', (e) => {
                     e.preventDefault();
-                    menuItems.forEach(m => m.classList.remove('active'));
-                    item.classList.add('active');
-                    activeCategory = item.getAttribute('data-category');
-                    
+                    const category = item.getAttribute('data-category');
                     const url = new URL(window.location.href);
-                    if (activeCategory === 'all') {
+                    url.searchParams.delete('page'); // Reset phân trang khi đổi danh mục
+                    if (category === 'all') {
                         url.searchParams.delete('category');
                     } else {
-                        url.searchParams.set('category', activeCategory);
+                        url.searchParams.set('category', category);
                     }
-                    window.history.pushState({}, '', url);
-
-                    filterSounds();
+                    window.location.href = url.toString();
                 });
             });
         }

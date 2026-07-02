@@ -7,8 +7,29 @@ use Illuminate\Http\Request;
 
 Route::get('/', function (Request $request) {
     $categories = TiengDongCategory::orderBy('name')->get();
-    $sounds = TiengDongSound::with('category')->orderBy('id', 'desc')->get();
+    
+    $query = TiengDongSound::with('category')->orderBy('id', 'desc');
+    
+    // Filter by Category
+    $categorySlug = $request->query('category', '');
+    if ($categorySlug && $categorySlug !== 'all') {
+        $query->whereHas('category', function ($q) use ($categorySlug) {
+            $q->where('slug', $categorySlug);
+        });
+    }
+    
+    // Filter by Search query
     $searchQuery = $request->query('s', '');
+    if ($searchQuery) {
+        // Simple search on title or slug
+        $query->where(function($q) use ($searchQuery) {
+            $q->where('title', 'like', '%' . $searchQuery . '%')
+              ->orWhere('slug', 'like', '%' . $searchQuery . '%');
+        });
+    }
+    
+    $sounds = $query->paginate(48)->withQueryString();
+    
     return view('welcome', compact('categories', 'sounds', 'searchQuery'));
 });
 
