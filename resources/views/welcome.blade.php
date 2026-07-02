@@ -865,19 +865,15 @@
             }, 1500);
         }
 
-        // Tạo audio element ẩn và preload động khi hover/touch, đồng thời preload 12 nút đầu tiên
+        // Tạo audio element ẩn và preload động khi hover/touch
         function setupPreload() {
             const cards = document.querySelectorAll('.sound-card');
-            const topPreloadCount = 12;
 
-            cards.forEach((card, index) => {
+            cards.forEach((card) => {
                 const id = card.id.replace('card-', '');
                 const btn = document.getElementById(`play-btn-${id}`);
                 if (!btn) return;
                 const audioUrl = btn.getAttribute('data-audio');
-                
-                // Khởi tạo audio object
-                getAudio(id, audioUrl);
 
                 // Preload khi di chuột vào card
                 card.addEventListener('mouseenter', () => {
@@ -888,17 +884,6 @@
                 card.addEventListener('touchstart', () => {
                     preloadSound(id, audioUrl);
                 }, { once: true });
-
-                // Tự động tải trước 12 âm thanh đầu tiên sau khi load xong trang để chơi tức thì
-                if (index < topPreloadCount) {
-                    if (document.readyState === 'complete') {
-                        setTimeout(() => preloadSound(id, audioUrl), index * 100);
-                    } else {
-                        window.addEventListener('load', () => {
-                            setTimeout(() => preloadSound(id, audioUrl), index * 100);
-                        });
-                    }
-                }
             });
         }
 
