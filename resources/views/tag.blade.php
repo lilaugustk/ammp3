@@ -893,6 +893,15 @@
             setupFavToggle();
             setupDropdown();
             setupPreload();
+
+            // Tự động kích hoạt lọc Yêu thích nếu URL có tham số filter=favorites
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('filter') === 'favorites') {
+                const favBtn = document.getElementById('show-fav-btn');
+                if (favBtn) {
+                    favBtn.click();
+                }
+            }
         });
 
         function playAudio(btn, id) {
@@ -944,11 +953,9 @@
             if (index === -1) {
                 favoritedIds.push(id);
                 if (btn) btn.classList.add('active-fav');
-                showToast("Đã lưu vào yêu thích!");
             } else {
                 favoritedIds.splice(index, 1);
                 if (btn) btn.classList.remove('active-fav');
-                showToast("Đã xóa khỏi yêu thích!");
 
                 // If in favorites-only mode, hide card immediately
                 if (showOnlyFavs) {

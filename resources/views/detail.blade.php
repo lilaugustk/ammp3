@@ -1028,6 +1028,8 @@
                         @endforeach
                     </div>
                 </div>
+                <span style="color: var(--border-color)">|</span>
+                <a href="{{ url('/?filter=favorites') }}" class="nav-link">Yêu thích</a>
             </nav>
         </div>
     </header>
@@ -1503,13 +1505,11 @@
                 if (favBtn) favBtn.classList.add('active-fav');
                 if (favText) favText.textContent = 'Đã Yêu thích';
                 if (relatedFavBtn) relatedFavBtn.classList.add('active-fav');
-                showToast("Đã lưu vào danh sách yêu thích!");
             } else {
                 favoritedIds.splice(finalIndex, 1);
                 if (favBtn) favBtn.classList.remove('active-fav');
                 if (favText) favText.textContent = 'Yêu thích';
                 if (relatedFavBtn) relatedFavBtn.classList.remove('active-fav');
-                showToast("Đã xóa khỏi danh sách yêu thích!");
             }
 
             localStorage.setItem('fav_sounds', JSON.stringify(favoritedIds));
@@ -1525,11 +1525,9 @@
             if (finalIndex === -1) {
                 favoritedIds.push(id.toString());
                 if (favBtn) favBtn.classList.add('active-fav');
-                showToast("Đã lưu vào danh sách yêu thích!");
             } else {
                 favoritedIds.splice(finalIndex, 1);
                 if (favBtn) favBtn.classList.remove('active-fav');
-                showToast("Đã xóa khỏi danh sách yêu thích!");
             }
 
             localStorage.setItem('fav_sounds', JSON.stringify(favoritedIds));

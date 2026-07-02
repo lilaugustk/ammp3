@@ -880,6 +880,15 @@
             setupFavToggle();
             setupDropdown();
             setupPreload();
+
+            // Tự động kích hoạt lọc Yêu thích nếu URL có tham số filter=favorites
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('filter') === 'favorites') {
+                const favBtn = document.getElementById('show-fav-btn');
+                if (favBtn) {
+                    favBtn.click();
+                }
+            }
         });
 
         // Hàm phát âm thanh
@@ -1100,12 +1109,10 @@
                 // Thêm vào yêu thích
                 favoritedIds.push(id);
                 if (favBtn) favBtn.classList.add('active-fav');
-                showToast("Đã lưu vào danh sách yêu thích!");
             } else {
                 // Xóa khỏi yêu thích
                 favoritedIds.splice(index, 1);
                 if (favBtn) favBtn.classList.remove('active-fav');
-                showToast("Đã xóa khỏi danh sách yêu thích!");
             }
 
             localStorage.setItem('fav_sounds', JSON.stringify(favoritedIds));
