@@ -21,6 +21,7 @@ class TiengDongSound extends Model
         'mp3_url',
         'local_path',
         'detail_url',
+        'description',
     ];
 
     /**
@@ -29,5 +30,13 @@ class TiengDongSound extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(TiengDongCategory::class, 'category_id');
+    }
+
+    /**
+     * Get the tags associated with this sound.
+     */
+    public function tags()
+    {
+        return $this->belongsToMany(TiengDongTag::class, 'tiengdong_sound_tag', 'sound_id', 'tag_id');
     }
 }

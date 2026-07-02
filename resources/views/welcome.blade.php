@@ -3,20 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AMMP3.com - Meme Soundboard Việt Nam - Kho Hiệu Ứng Âm Thanh Hài Hước</title>
+    <title>{{ $pageTitle ?? 'AMMP3.com - Meme Soundboard - Kho Hiệu Ứng Âm Thanh Hài Hước' }}</title>
     
     <!-- SEO Meta Tags -->
-    <meta name="description" content="Nghe và tải xuống hàng ngàn hiệu ứng âm thanh meme, tiếng cười, câu nói viral Việt Nam độc đáo nhất trên AMMP3.com. Giao diện soundboard đơn giản, cực nhanh, miễn phí!">
+    <meta name="description" content="{{ $pageDescription ?? 'Nghe và tải xuống hàng ngàn hiệu ứng âm thanh meme, tiếng cười, câu nói viral độc đáo nhất trên AMMP3.com. Giao diện soundboard đơn giản, cực nhanh, miễn phí!' }}">
     <meta name="keywords" content="ammp3, meme soundboard, hiệu ứng âm thanh, tiếng cười, âm thanh meme, âm thanh hài hước, tiếng động, câu nói viral">
     <meta name="author" content="AMMP3.com">
-    <link rel="canonical" href="{{ url('/') }}">
+    <link rel="canonical" href="{{ isset($activeCategory) ? url('/' . $activeCategory->slug) : url('/') }}">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="{{ url('/') }}">
-    <meta property="og:title" content="AMMP3.com - Meme Soundboard Việt Nam">
-    <meta property="og:description" content="Nghe và tải xuống hàng ngàn hiệu ứng âm thanh meme, tiếng cười độc đáo nhất trên AMMP3.com. Giao diện soundboard đơn giản, tải cực nhanh!">
+    <meta property="og:url" content="{{ isset($activeCategory) ? url('/' . $activeCategory->slug) : url('/') }}">
+    <meta property="og:title" content="{{ $pageTitle ?? 'AMMP3.com - Meme Soundboard' }}">
+    <meta property="og:description" content="{{ $pageDescription ?? 'Nghe và tải xuống hàng ngàn hiệu ứng âm thanh meme, tiếng cười độc đáo nhất trên AMMP3.com.' }}">
     <meta property="og:image" content="{{ asset('favicon.png') }}">
+    
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@@context": "https://schema.org",
+      "@@type": "WebSite",
+      "name": "AMMP3.com",
+      "url": "{{ url('/') }}",
+      "potentialAction": {
+        "@@type": "SearchAction",
+        "target": "{{ url('/?s={search_term_string}') }}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
@@ -611,11 +626,8 @@
                 AMMP3 <span>.com</span>
             </a>
             
-            <form action="{{ url('/') }}" method="GET" class="search-container" id="searchForm">
+            <form action="{{ isset($activeCategory) ? url('/' . $activeCategory->slug) : url('/') }}" method="GET" class="search-container" id="searchForm">
                 <input type="text" name="s" id="searchInput" class="search-input" placeholder="Tìm kiếm âm thanh..." value="{{ $searchQuery }}">
-                @if(request('category'))
-                    <input type="hidden" name="category" value="{{ request('category') }}">
-                @endif
                 <button type="submit" style="background:none; border:none; position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center;">
                     <svg class="search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="position:static; transform:none; width:16px; height:16px;">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -632,9 +644,9 @@
                         <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
                     </button>
                     <div class="dropdown-content" aria-labelledby="categoryDropdownBtn">
-                        <a class="category-menu-item {{ !request('category') || request('category') == 'all' ? 'active' : '' }}" data-category="all" href="{{ url('/') }}">Tất cả</a>
+                        <a class="category-menu-item {{ !isset($activeCategory) ? 'active' : '' }}" data-category="all" href="{{ url('/') }}">Tất cả</a>
                         @foreach($globalCategories as $category)
-                            <a class="category-menu-item {{ request('category') == $category->slug ? 'active' : '' }}" data-category="{{ $category->slug }}" href="{{ url('/?category=' . $category->slug) }}">
+                            <a class="category-menu-item {{ (isset($activeCategory) && $activeCategory->slug == $category->slug) ? 'active' : '' }}" data-category="{{ $category->slug }}" href="{{ url('/' . $category->slug) }}">
                                 {{ $category->name }}
                             </a>
                         @endforeach
@@ -651,8 +663,8 @@
         
         <!-- SEO friendly titles and summary info -->
         <section class="hero-section">
-            <h1 class="hero-title">AMMP3.com - Meme Soundboard Việt Nam</h1>
-            <p class="hero-desc">Click vào nút để phát âm thanh tức thì. Kho hiệu ứng âm thanh, tiếng cười, câu nói viral Việt Nam hài hước nhất dùng cho dựng video, livestream trên AMMP3.com.</p>
+            <h1 class="hero-title">{{ isset($activeCategory) ? 'Hiệu ứng âm thanh ' . $activeCategory->name : 'AMMP3.com - Meme Soundboard' }}</h1>
+            <p class="hero-desc">{{ isset($activeCategory) ? 'Nghe và tải xuống các hiệu ứng âm thanh thuộc danh mục ' . $activeCategory->name . ' chất lượng cao miễn phí phục vụ dựng phim, làm video.' : 'Click vào nút để phát âm thanh tức thì. Kho hiệu ứng âm thanh, tiếng động, tiếng cười, câu nói viral hài hước nhất dùng cho dựng video, livestream trên AMMP3.com.' }}</p>
         </section>
 
         <!-- Sounds Buttons Grid -->
@@ -794,22 +806,9 @@
         document.addEventListener('DOMContentLoaded', () => {
             initFavoritesUI();
             setupSearch();
-            setupCategories();
             setupFavToggle();
             setupDropdown();
             setupPreload();
-            
-            // Lọc danh mục nếu có sẵn từ query string
-            const urlParams = new URLSearchParams(window.location.search);
-            const initialCat = urlParams.get('category');
-            if (initialCat) {
-                const item = document.querySelector(`.category-menu-item[data-category="${initialCat}"]`);
-                if (item) {
-                    document.querySelectorAll('.category-menu-item').forEach(m => m.classList.remove('active'));
-                    item.classList.add('active');
-                    activeCategory = initialCat;
-                }
-            }
         });
 
         // Hàm phát âm thanh
@@ -965,24 +964,7 @@
             }
         }
 
-        // Đăng ký Lọc danh mục
-        function setupCategories() {
-            const menuItems = document.querySelectorAll('.category-menu-item');
-            menuItems.forEach(item => {
-                item.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const category = item.getAttribute('data-category');
-                    const url = new URL(window.location.href);
-                    url.searchParams.delete('page'); // Reset phân trang khi đổi danh mục
-                    if (category === 'all') {
-                        url.searchParams.delete('category');
-                    } else {
-                        url.searchParams.set('category', category);
-                    }
-                    window.location.href = url.toString();
-                });
-            });
-        }
+
 
         // Đăng ký và quản lý dropdown danh mục (đóng/mở bằng click & hover)
         function setupDropdown() {

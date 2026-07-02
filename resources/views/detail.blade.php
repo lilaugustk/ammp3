@@ -4,23 +4,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $sound->title }} - AMMP3.com</title>
+    <title>{{ $sound->title }} - Tải âm thanh MP3 chất lượng cao | AMMP3.com</title>
 
     <!-- SEO Meta Tags -->
     <meta name="description"
-        content="Nghe và tải xuống hiệu ứng âm thanh '{{ $sound->title }}' chất lượng cao miễn phí trên AMMP3.com. Sử dụng cho dựng video, livestream, meme soundboard.">
+        content="Tải hiệu ứng âm thanh '{{ $sound->title }}' chất lượng cao miễn phí, tải file MP3 {{ $sound->title }}, hiệu ứng âm thanh {{ $sound->title }} không bản quyền phục vụ dựng phim, video CapCut, TikTok.">
     <meta name="keywords"
-        content="{{ $sound->title }}, ammp3, meme soundboard, hiệu ứng âm thanh, tiếng cười, âm thanh hài hước">
+        content="{{ $sound->title }} mp3, tải {{ $sound->title }}, {{ $sound->title }} không bản quyền, ammp3, meme soundboard, hiệu ứng âm thanh, tiếng động">
     <meta name="author" content="AMMP3.com">
     <link rel="canonical" href="{{ url('/instant/' . $sound->slug . '-' . $sound->id) }}">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="music.song">
     <meta property="og:url" content="{{ url('/instant/' . $sound->slug . '-' . $sound->id) }}">
-    <meta property="og:title" content="{{ $sound->title }} - AMMP3.com">
+    <meta property="og:title" content="{{ $sound->title }} - Tải âm thanh MP3 chất lượng cao | AMMP3.com">
     <meta property="og:description"
-        content="Nghe và tải xuống hiệu ứng âm thanh '{{ $sound->title }}' chất lượng cao miễn phí trên AMMP3.com!">
+        content="Nghe và tải xuống hiệu ứng âm thanh '{{ $sound->title }}' chất lượng cao miễn phí không bản quyền trên AMMP3.com!">
     <meta property="og:image" content="{{ asset('favicon.png') }}">
+
+    <!-- JSON-LD Structured Data / Schema Markup -->
+    <script type="application/ld+json">
+    {
+      "@@context": "https://schema.org",
+      "@@graph": [
+        {
+          "@@type": "BreadcrumbList",
+          "@@id": "{{ url('/instant/' . $sound->slug . '-' . $sound->id) }}#breadcrumb",
+          "itemListElement": [
+            {
+              "@@type": "ListItem",
+              "position": 1,
+              "name": "Trang chủ",
+              "item": "{{ url('/') }}"
+            },
+            @if($sound->category)
+            {
+              "@@type": "ListItem",
+              "position": 2,
+              "name": "{{ $sound->category->name }}",
+              "item": "{{ url('/?category=' . $sound->category->slug) }}"
+            },
+            @endif
+            {
+              "@@type": "ListItem",
+              "position": 3,
+              "name": "{{ $sound->title }}",
+              "item": "{{ url('/instant/' . $sound->slug . '-' . $sound->id) }}"
+            }
+          ]
+        },
+        {
+          "@@type": "AudioObject",
+          "@@id": "{{ url('/instant/' . $sound->slug . '-' . $sound->id) }}#audio",
+          "name": "{{ $sound->title }}",
+          "description": "{{ $sound->description ?? 'Tải hiệu ứng âm thanh ' . $sound->title . ' chất lượng cao miễn phí không bản quyền' }}",
+          "contentUrl": "{{ $sound->local_path ? asset($sound->local_path) : $sound->mp3_url }}",
+          "encodingFormat": "audio/mpeg"
+        }
+      ]
+    }
+    </script>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
@@ -785,6 +828,29 @@
                     <span>Tải MP3</span>
                 </a>
             </div>
+
+            <!-- Tags Section -->
+            @if(isset($sound->tags) && $sound->tags->count() > 0)
+                <p class="tags-container" style="margin-top: 25px; font-size: 14px; color: var(--text-muted);">
+                    <span style="font-weight: 600; color: #ffffff; margin-right: 5px;">Chủ đề:</span>
+                    @foreach($sound->tags as $tag)
+                        <a href="{{ url('/tag/' . $tag->slug) }}" style="color: #3b82f6; text-decoration: none; margin-right: 12px; font-weight: 600; display: inline-block;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+                            {{ $tag->name }}
+                        </a>
+                    @endforeach
+                </p>
+            @endif
+
+            <!-- Description Section -->
+            @if($sound->description)
+                <div class="sound-description" style="margin-top: 30px; text-align: left; max-width: 500px; width: 100%;">
+                    <h3 style="font-size: 15px; font-weight: 700; color: #ffffff; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                        <svg style="width: 16px; height: 16px; fill: #3b82f6;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                        Mô tả chi tiết:
+                    </h3>
+                    <p style="font-size: 13.5px; color: var(--text-muted); line-height: 1.6; margin: 0;">{{ $sound->description }}</p>
+                </div>
+            @endif
 
             <a href="{{ url('/') }}" class="back-link">Quay lại danh sách chính</a>
         </div>

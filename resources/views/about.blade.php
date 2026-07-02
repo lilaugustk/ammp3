@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giới Thiệu - AMMP3.com</title>
-    <meta name="description" content="Giới thiệu về dự án AMMP3.com - Kho hiệu ứng âm thanh meme, tiếng cười, câu nói viral Việt Nam hài hước nhất.">
+    <meta name="description" content="Giới thiệu về dự án AMMP3.com - Kho hiệu ứng âm thanh meme, tiếng cười, câu nói viral hài hước nhất.">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="{{ url('/gioi-thieu') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -50,7 +50,7 @@
 
     <main class="container">
         <h1>Giới Thiệu Về Chúng Tôi</h1>
-        <p><strong>AMMP3.com</strong> là một nền tảng chia sẻ hiệu ứng âm thanh, tiếng động và nhạc nền meme hoàn toàn miễn phí tại Việt Nam.</p>
+        <p><strong>AMMP3.com</strong> là một nền tảng chia sẻ hiệu ứng âm thanh, tiếng động và nhạc nền meme hoàn toàn miễn phí.</p>
         
         <h2>Mục tiêu của chúng tôi</h2>
         <p>Chúng tôi mong muốn xây dựng một kho tài nguyên âm thanh hài hước, đa dạng và cập nhật xu hướng nhanh nhất, giúp cho các nhà sáng tạo nội dung (YouTuber, TikToker, Streamer) hoặc các biên tập viên video có được những tư liệu sinh động để lồng ghép vào sản phẩm của mình một cách dễ dàng và nhanh chóng.</p>
