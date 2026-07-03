@@ -22,6 +22,7 @@ class TiengDongSound extends Model
         'local_path',
         'detail_url',
         'description',
+        'is_optimized',
     ];
 
     /**
