@@ -19,7 +19,7 @@
             --border-color: #1f2937;
             --font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, sans-serif;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg-color); color: var(--card-text); font-family: var(--font-family); line-height: 1.6; }
         header { background-color: var(--nav-bg); border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; }
         .navbar { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 15px; }
