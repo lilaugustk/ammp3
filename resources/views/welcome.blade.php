@@ -112,8 +112,8 @@
 
         .search-input {
             width: 100%;
-            padding: 8px 15px;
-            padding-right: 35px;
+            height: 44px;
+            padding: 0 46px 0 16px;
             border-radius: 9999px;
             border: 1px solid var(--border-color);
             background-color: #1f2937;
@@ -667,7 +667,7 @@
             
             <form action="{{ isset($activeCategory) ? url('/' . $activeCategory->slug) : url('/') }}" method="GET" class="search-container" id="searchForm">
                 <input type="text" name="s" id="searchInput" class="search-input" placeholder="Tìm kiếm âm thanh..." value="{{ $searchQuery }}">
-                <button type="submit" style="background:none; border:none; position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                <button type="submit" aria-label="Tìm kiếm" style="background:none; border:none; position:absolute; right:2px; top:50%; transform:translateY(-50%); width:44px; height:44px; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center;">
                     <svg class="search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="position:static; transform:none; width:16px; height:16px;">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
