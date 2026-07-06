@@ -13,9 +13,9 @@ class AiService
 
     public function __construct()
     {
-        $this->apiKey = config('services.gemini.key', env('GEMINI_API_KEY'));
-        $this->provider = env('AI_PROVIDER', 'gemini');
-        $this->model = env('GEMINI_MODEL', 'gemini-2.5-flash');
+        $this->apiKey = config('services.gemini.key');
+        $this->provider = config('services.gemini.provider', 'gemini');
+        $this->model = config('services.gemini.model', 'gemini-2.5-flash');
     }
 
     /**
