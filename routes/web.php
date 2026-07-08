@@ -5,6 +5,9 @@ use App\Models\TiengDongCategory;
 use App\Models\TiengDongSound;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use App\Http\Controllers\SitemapController;
+
+Route::get('/sitemap.xml', [SitemapController::class, 'index']);
 
 Route::get('/', function (Request $request) {
     // Filter by Category parameter (redirect to clean SEO URL)
